@@ -1,25 +1,26 @@
 import cliente from "./cliente";
 
 export interface AcademiaDTO {
-    id?: number;
+    id?: string;
     nombreAcademia: string;
     nombreRepresentante: string;
     dniRepresentante: string;
+    telefonoRepresentante: string;
     logoUrl: string;
-    estado?: string;
+    activo?: boolean;
     fechaRegistro?: string;
     fechaActualizacion?: string;
-    distritoId?: number;
+    distritoId: number;
     nombreDistrito?: string;
 }
 
-export const registrarAcademia = (distritoId: number, data: AcademiaDTO) =>
-    cliente.post<AcademiaDTO>(`/api/academias/${distritoId}`, data);
+export const registrarAcademia = (data: AcademiaDTO) =>
+    cliente.post<AcademiaDTO>(`/api/academias`, data);
 
-export const editarAcademia = (id: number, data: AcademiaDTO) =>
+export const editarAcademia = (id: string, data: AcademiaDTO) =>
     cliente.put<AcademiaDTO>(`/api/academias/${id}`, data);
 
-export const buscarAcademia = (id: number) =>
+export const buscarAcademia = (id: string) =>
     cliente.get<AcademiaDTO>(`/api/academias/${id}`);
 
 export const listarAcademias = () =>

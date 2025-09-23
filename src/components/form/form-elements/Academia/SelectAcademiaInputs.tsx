@@ -2,7 +2,6 @@ import ComponentCard from "../../../common/ComponentCard";
 import Label from "../../Label";
 import Select from "../../Select";
 import { useUbicacion } from "../../../../hooks/Academia/useUbicacion";
-import { useEffect } from "react";
 
 interface SelectAcademiaInputsProps {
     onDistritoChange: (distritoId: number | null) => void;

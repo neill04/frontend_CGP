@@ -19,12 +19,12 @@ export function useAcademias() {
         }
     };
 
-    const postAcademia = async (distritoId: number, data: AcademiaDTO) => {
+    const postAcademia = async (data: AcademiaDTO) => {
         setLoading(true);
         setError(null);
         try {
-            await registrarAcademia(distritoId, data);
-            await fetchAcademias(); // refresca lista
+            await registrarAcademia(data);
+            await fetchAcademias(); 
         } catch (err) {
             setError("Error al registrar la academia");
         } finally {
@@ -32,7 +32,7 @@ export function useAcademias() {
         }
     };
 
-    const updateAcademia = async (id: number, data: AcademiaDTO) => {
+    const updateAcademia = async (id: string, data: AcademiaDTO) => {
         setLoading(true);
         setError(null);
         try {
@@ -45,7 +45,7 @@ export function useAcademias() {
         }
     };
 
-    const getAcademia = async (id: number) => {
+    const getAcademia = async (id: string) => {
         try {
             const res = await buscarAcademia(id);
             return res.data;

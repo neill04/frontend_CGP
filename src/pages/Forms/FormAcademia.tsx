@@ -14,7 +14,9 @@ export default function FormAcademia() {
         nombreAcademia: "",
         nombreRepresentante: "",
         dniRepresentante: "",
+        telefonoRepresentante: "",
         logoUrl: "",
+        distritoId: 0,
     });
 
     const [distritoId, setDistritoId] = useState<number | null>(null);
@@ -30,8 +32,19 @@ export default function FormAcademia() {
             return;
         }
 
-        await postAcademia(distritoId, formData);
+        const payload = { ...formData, distritoId };
+
+        await postAcademia(payload);
         alert("Academia registrada con éxito");
+
+        setFormData({
+            nombreAcademia: "",
+            nombreRepresentante: "",
+            dniRepresentante: "",
+            telefonoRepresentante: "",
+            logoUrl: "",
+            distritoId: 0,
+        });
     };
 
     return (
@@ -44,7 +57,7 @@ export default function FormAcademia() {
             <form onSubmit={handleSubmit}>
                 <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                     <div className="space-y-6">
-                        <DefaultAcademiaInputs onChange={handleChange} />
+                        <DefaultAcademiaInputs onChange={handleChange} initialData={formData} />
                         <SelectAcademiaInputs onDistritoChange={setDistritoId} />
                         <FileInputAcademia onChange={(url) => handleChange("logoUrl", url)} />
 

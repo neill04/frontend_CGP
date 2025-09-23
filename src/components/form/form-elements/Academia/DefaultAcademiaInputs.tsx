@@ -6,9 +6,10 @@ import { AcademiaDTO } from "../../../../api/academiaApi";
 interface DefaultAcademiaInputsProps {
   onChange: (field: keyof AcademiaDTO, value: string) => void;
   initialData?: AcademiaDTO;
+  isEdit?: boolean;
 }
 
-export default function DefaultAcademiaInputs({ onChange, initialData }: DefaultAcademiaInputsProps) {
+export default function DefaultAcademiaInputs({ onChange, initialData, isEdit = false }: DefaultAcademiaInputsProps) {
   return (
     <ComponentCard title="Datos de la Academia">
       <div className="space-y-6">
@@ -39,6 +40,46 @@ export default function DefaultAcademiaInputs({ onChange, initialData }: Default
             value={initialData?.dniRepresentante || ""}  
           />
         </div>
+        <div>
+          <Label htmlFor="telefonoRepresentante">Telefono del Representante</Label>
+          <Input 
+            type="text" 
+            id="telefonoRepresentante" 
+            onChange={(e) => onChange("telefonoRepresentante", e.target.value)}
+            value={initialData?.telefonoRepresentante || ""}  
+          />
+        </div>
+        {isEdit && (
+          <>
+            <div>
+            <Label htmlFor="activo">Estado de la Academia</Label>
+            <Input 
+              type="text" 
+              id="activo" 
+              value={initialData?.activo ? "Activo" : "Inactivo"}
+              disabled
+            />
+            </div>
+            <div>
+              <Label htmlFor="fechaRegistro">Fecha de Registro</Label>
+              <Input 
+                type="text" 
+                id="fechaRegistro" 
+                value={initialData?.fechaRegistro || ""}
+                disabled  
+              />
+            </div>
+            <div>
+              <Label htmlFor="fechaActualizacion">Fecha de la ultima modificación de datos</Label>
+              <Input 
+                type="text" 
+                id="fechaActualizacion" 
+                value={initialData?.fechaActualizacion || ""}
+                disabled  
+              />
+            </div>
+          </>
+        )}
       </div>
     </ComponentCard>
   );

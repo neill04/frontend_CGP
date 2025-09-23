@@ -9,14 +9,16 @@ import { useAcademias } from "../../hooks/Academia/useAcademia";
 import { AcademiaDTO } from "../../api/academiaApi";
 
 export default function FormAcademiaEdit() {
-    const { id } = useParams();
+    const { id } = useParams<{ id: string }>();
     const { getAcademia, updateAcademia, loading, error } = useAcademias();
 
     const [formData, setFormData] = useState<AcademiaDTO>({
         nombreAcademia: "",
         nombreRepresentante: "",
         dniRepresentante: "",
+        telefonoRepresentante: "",
         logoUrl: "",
+        distritoId: 0,
     });
 
     const [distritoId, setDistritoId] = useState<number | null>(null);
@@ -24,7 +26,7 @@ export default function FormAcademiaEdit() {
     useEffect(() => {
         const fetchAcademiaData = async () => {
             if (id) {
-                const academia = await getAcademia(parseInt(id, 10));
+                const academia = await getAcademia(id);
                 if (academia) {
                     setFormData(academia);
                     
@@ -43,12 +45,12 @@ export default function FormAcademiaEdit() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!distritoId || !id) {
+        if (!id) {
             alert("Información incompleta");
             return;
         }
 
-        await updateAcademia(parseInt(id, 10), { ...formData, distritoId }); 
+        await updateAcademia(id, formData); 
         alert("Academia actualizada con éxito");
     };
 
@@ -65,6 +67,7 @@ export default function FormAcademiaEdit() {
                         <DefaultAcademiaInputs
                             onChange={handleChange}
                             initialData={formData}
+                            isEdit
                         />
                         {/*
                         <SelectAcademiaInputs

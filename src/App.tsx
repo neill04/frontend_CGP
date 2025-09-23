@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router";
-import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
 import NotFound from "./pages/OtherPage/NotFound";
 import UserProfiles from "./pages/UserProfiles";
@@ -20,6 +19,9 @@ import Home from "./pages/Dashboard/Home";
 import FormAcademia from "./pages/Forms/FormAcademia";
 import AcademiasList from "./pages/Academia/AcademiasList";
 import FormAcademiaEdit from "./pages/Forms/FormAcademiaEdit";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import SignInCGP from "./pages/AuthPages/SignInCGP";
+import AcademiaInfo from "./pages/Academia/AcademiaInfo";
 
 export default function App() {
   return (
@@ -28,7 +30,11 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           {/* Dashboard Layout */}
-          <Route element={<AppLayout />}>
+          <Route element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>}
+          >
             <Route index path="/" element={<Home />} />
 
             {/* Others Page */}
@@ -43,6 +49,7 @@ export default function App() {
             {/* Tables */}
             <Route path="/basic-tables" element={<BasicTables />} />
             <Route path="/academias" element={<AcademiasList />} />
+            <Route path="/academias/:id" element={<AcademiaInfo />} />
 
             {/* Ui Elements */}
             <Route path="/alerts" element={<Alerts />} />
@@ -58,7 +65,7 @@ export default function App() {
           </Route>
 
           {/* Auth Layout */}
-          <Route path="/signin" element={<SignIn />} />
+          <Route path="/signin" element={<SignInCGP />} />
           <Route path="/signup" element={<SignUp />} />
 
           {/* Fallback Route */}
