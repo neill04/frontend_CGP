@@ -11,7 +11,7 @@ export default function AcademiaInfo() {
   const { id } = useParams<{ id: string }>();
   const { getAcademia } = useAcademias();
 
-  const [data, setData] = useState<AcademiaDTO>({
+  const [academia, setAcademia] = useState<AcademiaDTO>({
     nombreAcademia: "",
     nombreRepresentante: "",
     dniRepresentante: "",
@@ -25,7 +25,7 @@ export default function AcademiaInfo() {
       if (id) {
         const academia = await getAcademia(id);
         if (academia) {
-          setData(academia);
+          setAcademia(academia);
         }
       }
     };
@@ -40,17 +40,17 @@ export default function AcademiaInfo() {
       />
       <div className="space-y-6">
         <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold">{data.nombreAcademia}</h1>
-          {data.logoUrl && (
+          <h1 className="text-2xl font-bold">{academia.nombreAcademia}</h1>
+          {academia.logoUrl && (
             <img 
-              src={data.logoUrl}
+              src={academia.logoUrl}
               className="mx-auto h-40 w-40 object-contain rounded-lg shadow-md border-4 border-black"
             />
           )}
         </div>
         <div className="flex gap-4">
           <Link
-          to="/formEquipo"
+          to={`/academias/${academia.id}/formEquipo`}
           className="inline-flex select-none items-center gap-3 rounded-lg bg-red-600 py-2 px-4 text-center align-middle font-sans text-xs font-bold uppercase text-white shadow-md shadow-red-600/30 transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">

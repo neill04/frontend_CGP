@@ -22,6 +22,7 @@ import FormAcademiaEdit from "./pages/Forms/FormAcademiaEdit";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import SignInCGP from "./pages/AuthPages/SignInCGP";
 import AcademiaInfo from "./pages/Academia/AcademiaInfo";
+import FormEquipo from "./pages/Forms/FormEquipo";
 
 export default function App() {
   return (
@@ -45,6 +46,7 @@ export default function App() {
             {/* Forms */}
             <Route path="/formAcademia" element={<FormAcademia />} />
             <Route path="/formAcademia/edit/:id" element={<FormAcademiaEdit />} />
+            <Route path="/academias/:id/formEquipo" element={<FormEquipo />} />
 
             {/* Tables */}
             <Route path="/basic-tables" element={<BasicTables />} />

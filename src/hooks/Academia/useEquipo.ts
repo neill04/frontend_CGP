@@ -24,7 +24,7 @@ export function useEquipos(academiaId: string) {
     fetchEquipos();
   }, [academiaId]);
 
-  const postEquipo = async (data: EquipoDTO) => {
+  const registerEquipo = async (data: EquipoDTO) => {
     setLoading(true);
     setError(null);
     try {
@@ -64,7 +64,7 @@ export function useEquipos(academiaId: string) {
     loading,
     error,
     fetchEquipos,
-    postEquipo,
+    registerEquipo,
     updateEquipo,
     getEquipo,
   };
