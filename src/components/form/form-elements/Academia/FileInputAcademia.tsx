@@ -1,6 +1,5 @@
 import ComponentCard from "../../../common/ComponentCard";
 import FileInput from "../../input/FileInput";
-import { useState, useEffect } from "react";
 
 interface FileInputAcademiaProps {
   onChange: (url: string) => void;

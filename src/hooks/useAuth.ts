@@ -7,21 +7,27 @@ interface UseAuthResult {
 }
 
 export function useAuth(): UseAuthResult {
-  const [loading, setLoading] = useState<boolean>(true);
-  const [authenticated, setAuthenticated] = useState<boolean>(false);
+  const [loading, setLoading] = useState(true);
+  const [authenticated, setAuthenticated] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     cliente
       .get("api/auth/check", { withCredentials: true }) 
       .then(() => {
-        setAuthenticated(true);
+        if (isMounted) setAuthenticated(true);
       })
       .catch(() => {
-        setAuthenticated(false);
+        if (isMounted) setAuthenticated(false);
       })
       .finally(() => {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   return { loading, authenticated };

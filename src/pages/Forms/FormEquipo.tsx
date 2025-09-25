@@ -6,7 +6,6 @@ import { useEquipos } from "../../hooks/Academia/useEquipo";
 import { EquipoDTO } from "../../api/equipoApi";
 import DefaultEquipoInputs from "../../components/form/form-elements/Academia/DefaultEquipoInputs";
 import SelectEquipoInputs from "../../components/form/form-elements/Academia/SelectEquipoInputs";
-import Label from "../../components/form/Label";
 import SelectCategoriaInputs from "../../components/form/form-elements/Academia/SelectCategoriaInputs";
 
 export default function FormEquipo() {

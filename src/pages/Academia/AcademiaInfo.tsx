@@ -1,5 +1,4 @@
 import { useParams } from "react-router";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import { useAcademias } from "../../hooks/Academia/useAcademia";
 import { useEffect, useState } from "react";
@@ -41,12 +40,14 @@ export default function AcademiaInfo() {
       <div className="space-y-6">
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold">{academia.nombreAcademia}</h1>
-          {academia.logoUrl && (
-            <img 
-              src={academia.logoUrl}
-              className="mx-auto h-40 w-40 object-contain rounded-lg shadow-md border-4 border-black"
-            />
-          )}
+          <div className="mx-auto h-40 w-40 rounded-lg shadow-md border-4 border-black flex items-center justify-center bg-gray-100">
+            {academia.logoUrl && (
+              <img 
+                src={academia.logoUrl}
+                className="mx-auto h-40 w-40 object-contain"
+              />
+            )}
+          </div>
         </div>
         <div className="flex gap-4">
           <Link
@@ -56,10 +57,10 @@ export default function AcademiaInfo() {
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
-            Registrar Equipo
+            Añadir categoría
           </Link>
           <Link
-            to="/formEntrenador"
+            to={`/academias/${academia.id}/formEntrenador`}
             className="inline-flex select-none items-center gap-3 rounded-lg bg-red-600 py-2 px-4 text-center align-middle font-sans text-xs font-bold uppercase text-white shadow-md shadow-red-600/30 transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
@@ -68,7 +69,7 @@ export default function AcademiaInfo() {
             Registrar Entrenador
           </Link>
           <Link
-            to="/formDelegado"
+            to={`/academias/${academia.id}/formDelegado`}
             className="inline-flex select-none items-center gap-3 rounded-lg bg-red-600 py-2 px-4 text-center align-middle font-sans text-xs font-bold uppercase text-white shadow-md shadow-red-600/30 transition-all hover:bg-red-700 hover:shadow-lg hover:shadow-red-600/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">

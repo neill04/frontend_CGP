@@ -9,9 +9,9 @@ export interface EntrenadorDTO {
   fechaNacimiento: string;
   telefono: string;
   email: string;
-  fotoUrl: string;
-  estadoDisciplina: string;
-  observaciones: string;
+  fotoUrl?: string;
+  estadoDisciplina?: string;
+  observaciones?: string;
   fechaRegistro?: string;
   fechaActualizacion?: string;
 }
