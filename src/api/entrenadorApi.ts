@@ -12,6 +12,7 @@ export interface EntrenadorDTO {
   fotoUrl?: string;
   estadoDisciplina?: string;
   observaciones?: string;
+  nombreAcademia?: string;
   fechaRegistro?: string;
   fechaActualizacion?: string;
 }

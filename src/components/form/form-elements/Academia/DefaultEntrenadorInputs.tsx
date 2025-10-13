@@ -19,6 +19,7 @@ export default function DefaultEntrenadorInputs({ onChange, initialData, isEdit 
           <Input 
             type="text" 
             id="dni" 
+            disabled={!isEdit}
             onChange={(e) => onChange("dni", e.target.value)}
             value={initialData?.dni || ""}
           />
@@ -28,6 +29,7 @@ export default function DefaultEntrenadorInputs({ onChange, initialData, isEdit 
           <Input 
             type="text" 
             id="apellidos" 
+            disabled={!isEdit}
             onChange={(e) => onChange("apellidos", e.target.value)}
             value={initialData?.apellidos || ""}
           />
@@ -37,6 +39,7 @@ export default function DefaultEntrenadorInputs({ onChange, initialData, isEdit 
           <Input 
             type="text" 
             id="nombres" 
+            disabled={!isEdit}
             onChange={(e) => onChange("nombres", e.target.value)}
             value={initialData?.nombres || ""}
           />
@@ -46,6 +49,7 @@ export default function DefaultEntrenadorInputs({ onChange, initialData, isEdit 
           <Input 
             type="text" 
             id="licencia" 
+            disabled={!isEdit}
             onChange={(e) => onChange("licencia", e.target.value)}
             value={initialData?.licencia || ""}
           />
@@ -55,6 +59,7 @@ export default function DefaultEntrenadorInputs({ onChange, initialData, isEdit 
           <Input 
             type="text" 
             id="telefono" 
+            disabled={!isEdit}
             onChange={(e) => onChange("telefono", e.target.value)}
             value={initialData?.telefono || ""}
           />
@@ -64,6 +69,7 @@ export default function DefaultEntrenadorInputs({ onChange, initialData, isEdit 
           <Input 
             type="text" 
             id="email" 
+            disabled={!isEdit}
             placeholder="entrenador@example.com"
             onChange={(e) => onChange("email", e.target.value)}
             value={initialData?.email || ""}
@@ -84,39 +90,6 @@ export default function DefaultEntrenadorInputs({ onChange, initialData, isEdit 
             }}
             />
         </div>
-        {/*
-        {isEdit && (
-          <>
-            <div>
-            <Label htmlFor="activo">Estado de la Academia</Label>
-            <Input 
-              type="text" 
-              id="activo" 
-              value={initialData?.activo ? "Activo" : "Inactivo"}
-              disabled
-            />
-            </div>
-            <div>
-              <Label htmlFor="fechaRegistro">Fecha de Registro</Label>
-              <Input 
-                type="text" 
-                id="fechaRegistro" 
-                value={initialData?.fechaRegistro || ""}
-                disabled  
-              />
-            </div>
-            <div>
-              <Label htmlFor="fechaActualizacion">Fecha de la ultima modificación de datos</Label>
-              <Input 
-                type="text" 
-                id="fechaActualizacion" 
-                value={initialData?.fechaActualizacion || ""}
-                disabled  
-              />
-            </div>
-          </>
-        )}
-        */}
       </div>
     </ComponentCard>
   );

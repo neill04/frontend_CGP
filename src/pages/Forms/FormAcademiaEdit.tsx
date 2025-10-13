@@ -4,7 +4,6 @@ import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import DefaultAcademiaInputs from "../../components/form/form-elements/Academia/DefaultAcademiaInputs";
 import FileInputAcademia from "../../components/form/form-elements/Academia/FileInputAcademia";
-import SelectAcademiaInputs from "../../components/form/form-elements/Academia/SelectAcademiaInputs";
 import { useAcademias } from "../../hooks/Academia/useAcademia";
 import { AcademiaDTO } from "../../api/academiaApi";
 

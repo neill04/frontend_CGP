@@ -48,10 +48,10 @@ export default function FormEquipo() {
   return (
       <div>
           <PageMeta
-              title="Form Equipos"
-              description="Página para registrar los equipos o sus categorías de la academia"
+              title="Form Categorías"
+              description="Página para registrar las categorías de la academia"
           />
-          <PageBreadcrumb pageTitle="Registrar Equipo" />
+          <PageBreadcrumb pageTitle="Registrar Categoría" />
           <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
                   <div className="space-y-6">
@@ -71,11 +71,15 @@ export default function FormEquipo() {
 
                     {error && <p className="text-red-500">{error}</p>}
                     <button
-                        type="submit"
-                        disabled={loading}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md"
+                      type="submit"
+                      disabled={loading}
+                      className="inline-flex select-none items-center gap-3 rounded-lg border border-black bg-white py-2 px-4 text-center align-middle font-sans text-xs font-bold uppercase text-black shadow-md shadow-black/40 transition-all hover:bg-black hover:text-white hover:shadow-lg hover:shadow-black-/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
                     >
-                        {loading ? "Guardando..." : "Registrar Equipo"}
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+                      </svg>
+
+                      {loading ? "Guardando..." : "Registrar Categoría"}
                     </button>
                   </div>
               </div>   

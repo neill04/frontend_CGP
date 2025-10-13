@@ -9,6 +9,7 @@ export interface DelegadoDTO {
   telefono: string;
   email: string;
   fotoUrl: string;
+  nombreAcademia?: string;
   fechaRegistro?: string;
   fechaActualizacion?: string;
 }

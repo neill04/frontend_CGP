@@ -25,6 +25,8 @@ import AcademiaInfo from "./pages/Academia/AcademiaInfo";
 import FormEquipo from "./pages/Forms/FormEquipo";
 import FormEntrenador from "./pages/Forms/FormEntrenador";
 import FormDelegado from "./pages/Forms/FormDelegado";
+import EntrenadorProfile from "./pages/UserProfiles/EntrenadorProfile";
+import DelegadoProfile from "./pages/UserProfiles/DelegadoProfile";
 
 export default function App() {
   return (
@@ -51,6 +53,8 @@ export default function App() {
             <Route path="/academias/:id/formEquipo" element={<FormEquipo />} />
             <Route path="/academias/:id/formEntrenador" element={<FormEntrenador />} />
             <Route path="/academias/:id/formDelegado" element={<FormDelegado />} />
+            <Route path="/academias/:academiaId/entrenadores/:entrenadorId" element={<EntrenadorProfile />} />
+            <Route path="/academias/:academiaId/delegados/:delegadoId" element={<DelegadoProfile />} />
 
             {/* Tables */}
             <Route path="/basic-tables" element={<BasicTables />} />
