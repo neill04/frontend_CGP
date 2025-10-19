@@ -1,5 +1,4 @@
 import ComponentCard from "../../../common/ComponentCard";
-import Label from "../../Label";
 import Select from "../../Select";
 
 interface SelectCategoriaInputsProps {
