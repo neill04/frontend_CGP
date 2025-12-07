@@ -54,6 +54,11 @@ import { ReactComponent as ChatIcon } from "./chat.svg?react";
 import { ReactComponent as MoreDotIcon } from "./moredot.svg?react";
 import { ReactComponent as AlertHexaIcon } from "./alert-hexa.svg?react";
 import { ReactComponent as ErrorHexaIcon } from "./info-hexa.svg?react";
+import { ReactComponent as AcademiaIcon } from "./academia.svg?react";
+import { ReactComponent as EquipoIcon } from "./equipo.svg?react";
+import { ReactComponent as EntrenadorIcon } from "./entrenador.svg?react";
+import { ReactComponent as DelegadoIcon } from "./delegado.svg?react";
+import { ReactComponent as JugadorIcon } from "./jugador.svg?react";
 
 export {
   ErrorHexaIcon,
@@ -112,4 +117,9 @@ export {
   ChatIcon,
   AngleLeftIcon,
   AngleRightIcon,
+  AcademiaIcon,
+  EquipoIcon,
+  EntrenadorIcon,
+  DelegadoIcon,
+  JugadorIcon,
 };

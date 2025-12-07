@@ -29,63 +29,202 @@ import EntrenadorProfile from "./pages/UserProfiles/EntrenadorProfile";
 import DelegadoProfile from "./pages/UserProfiles/DelegadoProfile";
 import EquipoInfo from "./pages/Academia/EquipoInfo";
 import FormJugador from "./pages/Forms/FormJugador";
+import { AuthProvider } from "./context/AuthContext";
+import EquiposList from "./pages/EquiposList";
+import EntrenadoresList from "./pages/EntrenadoresList";
+import DelegadosList from "./pages/DelegadosList";
+import JugadoresList from "./pages/JugadoresList";
+import JugadoresListAcademia from "./pages/Academia/JugadoresListAcademia";
+import EntrenadoresListAcademia from "./pages/Academia/EntrenadoresListAcademia";
+import DelegadosListAcademia from "./pages/Academia/DelegadosListAcademia";
 
 export default function App() {
   return (
     <>
-      <Router>
-        <ScrollToTop />
-        <Routes>
-          {/* Dashboard Layout */}
-          <Route element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>}
-          >
-            <Route index path="/" element={<Home />} />
+      <AuthProvider>
+        <Router>
+          <ScrollToTop />
+          <Routes>
+            {/* Dashboard Layout */}
+            <Route element={
+              <ProtectedRoute>
+                <AppLayout />
+              </ProtectedRoute>}
+            >
+              <Route index path="/" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR"]}>
+                    <Home />
+                  </ProtectedRoute>
+                } 
+              />
 
-            {/* Others Page */}
-            <Route path="/profile" element={<UserProfiles />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/blank" element={<Blank />} />
+              {/* Others Page */}
+              <Route path="/profile" element={<UserProfiles />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/blank" element={<Blank />} />
 
-            {/* Forms */}
-            <Route path="/formAcademia" element={<FormAcademia />} />
-            <Route path="/formAcademia/edit/:id" element={<FormAcademiaEdit />} />
-            <Route path="/academias/:id/formEquipo" element={<FormEquipo />} />
-            <Route path="/academias/:id/formEntrenador" element={<FormEntrenador />} />
-            <Route path="/academias/:id/formDelegado" element={<FormDelegado />} />
-            <Route path="/academias/:academiaId/equipos/:equipoId/jugadores" element={<FormJugador />} />
-            <Route path="/academias/:academiaId/entrenadores/:entrenadorId" element={<EntrenadorProfile />} />
-            <Route path="/academias/:academiaId/delegados/:delegadoId" element={<DelegadoProfile />} />
-            <Route path="/academias/:academiaId/equipos/:equipoId" element={<EquipoInfo />} />
- 
-            {/* Tables */}
-            <Route path="/basic-tables" element={<BasicTables />} />
-            <Route path="/academias" element={<AcademiasList />} />
-            <Route path="/academias/:id" element={<AcademiaInfo />} />
+              {/* Forms */}
+              <Route path="/formAcademia" element={
+                <ProtectedRoute roles={["ADMINISTRADOR"]}>
+                  <FormAcademia />
+                </ProtectedRoute>
+              }/>
+              <Route path="/formAcademia/edit/:id" element={<FormAcademiaEdit />} />
+              
+              <Route path="/academias/:id/formEquipo" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
+                    <FormEquipo />
+                  </ProtectedRoute>
+                } 
+              />
 
-            {/* Ui Elements */}
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/avatars" element={<Avatars />} />
-            <Route path="/badge" element={<Badges />} />
-            <Route path="/buttons" element={<Buttons />} />
-            <Route path="/images" element={<Images />} />
-            <Route path="/videos" element={<Videos />} />
+              <Route path="/academias/:id/formEntrenador" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
+                    <FormEntrenador />
+                  </ProtectedRoute>
+                } 
+              />
 
-            {/* Charts */}
-            <Route path="/line-chart" element={<LineChart />} />
-            <Route path="/bar-chart" element={<BarChart />} />
-          </Route>
+              <Route path="/academias/:id/formDelegado" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
+                    <FormDelegado />
+                  </ProtectedRoute>
+                } 
+              />
 
-          {/* Auth Layout */}
-          <Route path="/signin" element={<SignInCGP />} />
-          <Route path="/signup" element={<SignUp />} />
+              <Route path="/academias/:academiaId/equipos/:equipoId/jugadores" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
+                    <FormJugador />
+                  </ProtectedRoute>
+                } 
+              />
 
-          {/* Fallback Route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Router>
+              <Route path="/academias/:academiaId/entrenadores/:entrenadorId"
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
+                    <EntrenadorProfile />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route path="/academias/:academiaId/delegados/:delegadoId"
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
+                    <DelegadoProfile />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route path="/academias/:academiaId/equipos/:equipoId" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
+                    <EquipoInfo />
+                  </ProtectedRoute>
+                } 
+              />
+  
+              {/* Tables */}
+              <Route path="/basic-tables" element={<BasicTables />} />
+              
+              <Route path="/academias" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR"]}>
+                    <AcademiasList />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route path="/equipos"
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR"]}>
+                    <EquiposList />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="/entrenadores"
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR"]}>
+                    <EntrenadoresList />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="/delegados"
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR"]}>
+                    <DelegadosList />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="/jugadores"
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR"]}>
+                    <JugadoresList />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route path="/academias/:academiaId/entrenadores" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
+                    <EntrenadoresListAcademia />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route path="/academias/:academiaId/delegados" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
+                    <DelegadosListAcademia />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route path="/academias/:academiaId/jugadores" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
+                    <JugadoresListAcademia />
+                  </ProtectedRoute>
+                } 
+              />
+
+              <Route path="/academias/:id" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
+                    <AcademiaInfo />
+                  </ProtectedRoute>
+                } 
+              />
+
+              {/* Ui Elements */}
+              <Route path="/alerts" element={<Alerts />} />
+              <Route path="/avatars" element={<Avatars />} />
+              <Route path="/badge" element={<Badges />} />
+              <Route path="/buttons" element={<Buttons />} />
+              <Route path="/images" element={<Images />} />
+              <Route path="/videos" element={<Videos />} />
+
+              {/* Charts */}
+              <Route path="/line-chart" element={<LineChart />} />
+              <Route path="/bar-chart" element={<BarChart />} />
+            </Route>
+
+            {/* Auth Layout */}
+            <Route path="/signin" element={<SignInCGP />} />
+            <Route path="/signup" element={<SignUp />} />
+
+            {/* Fallback Route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Router>
+      </AuthProvider>
     </>
   );
 }

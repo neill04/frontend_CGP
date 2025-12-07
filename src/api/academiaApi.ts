@@ -12,6 +12,7 @@ export interface AcademiaDTO {
     fechaActualizacion?: string;
     distritoId: number;
     nombreDistrito?: string;
+    totalEquipos?: number;
 }
 
 export const registrarAcademia = (data: AcademiaDTO) =>
