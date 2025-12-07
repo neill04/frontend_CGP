@@ -3,7 +3,7 @@ import PageMeta from "../../components/common/PageMeta";
 
 // Simulación de datos - Reemplazar con llamadas a API reales
 const useDashboardData = () => {
-  const [data, setData] = useState({
+  const [data] = useState({
     jugadores: 450,
     equipos: 32,
     academias: 16,

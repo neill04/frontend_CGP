@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { registrarAcademia, editarAcademia, buscarAcademia, listarAcademias, AcademiaDTO } from "../../api/academiaApi";
 
 export function useAcademias() {

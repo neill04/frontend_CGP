@@ -11,7 +11,6 @@ interface SelectAcademiaInputsProps {
 
 export default function SelectAcademiaInputs({ 
   onDistritoChange, 
-  initialDistritoId,
   error 
 }: SelectAcademiaInputsProps) {
   const {
@@ -26,7 +25,7 @@ export default function SelectAcademiaInputs({
     onDepartamentoChange,
     onProvinciaChange,
     onDistritoChange: onDistritoChangeHook,
-  } = useUbicacion(initialDistritoId);
+  } = useUbicacion();
 
   const handleDepartamentoChange = (value: string) => {
     onDepartamentoChange(Number(value));

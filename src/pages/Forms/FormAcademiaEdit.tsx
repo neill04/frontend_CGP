@@ -19,18 +19,12 @@ export default function FormAcademiaEdit() {
         distritoId: 0,
     });
 
-    const [distritoId, setDistritoId] = useState<number | null>(null);
-
     useEffect(() => {
         const fetchAcademiaData = async () => {
             if (id) {
                 const academia = await getAcademia(id);
                 if (academia) {
                     setFormData(academia);
-                    
-                    if (academia.distritoId !== undefined) {
-                      setDistritoId(academia.distritoId);
-                    }
                 }
             }
         };

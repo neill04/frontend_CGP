@@ -17,10 +17,14 @@ export default function FormEquipo() {
     colorCamiseta: "",
     entrenadorId: "",
     delegadoId: "",
+    dniEntrenador: "",
     apellidosEntrenador: "",
     nombresEntrenador: "",
+    telefonoEntrenador: "",
+    dniDelegado: "",
     apellidosDelegado: "",
     nombresDelegado: "",
+    telefonoDelegado: "",
   });
 
   const handleChange = (field: keyof EquipoDTO, value: string) => {
@@ -35,13 +39,17 @@ export default function FormEquipo() {
 
       setFormData({
         categoria: "",
-        colorCamiseta: "",
-        entrenadorId: "",
-        delegadoId: "",
-        apellidosEntrenador: "",
-        nombresEntrenador: "",
-        apellidosDelegado: "",
-        nombresDelegado: "",
+      colorCamiseta: "",
+      entrenadorId: "",
+      delegadoId: "",
+      dniEntrenador: "",
+      apellidosEntrenador: "",
+      nombresEntrenador: "",
+      telefonoEntrenador: "",
+      dniDelegado: "",
+      apellidosDelegado: "",
+      nombresDelegado: "",
+      telefonoDelegado: "",
       });
   };
 
