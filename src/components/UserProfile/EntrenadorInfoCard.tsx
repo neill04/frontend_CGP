@@ -7,7 +7,6 @@ import Label from "../form/Label";
 import DatePicker from "../form/date-picker";
 import { useEntrenadores } from "../../hooks/Academia/useEntrenador";
 import { EntrenadorDTO } from "../../api/entrenadorApi";
-import FileInputEntrenador from "../form/form-elements/Academia/FileInputEntrenador";
 
 interface EntrenadorInfoCardProps {
   academiaId: string;
@@ -337,14 +336,6 @@ export default function EntrenadorInfoCard({
                           handleChange("fechaNacimiento", date.toISOString().split("T")[0]);
                         }
                       }}
-                    />
-                  </div>
-
-                  <div className="lg:col-span-2">
-                    <Label>Foto del Entrenador</Label>
-                    <FileInputEntrenador 
-                      onChange={(url) => handleChange("fotoUrl", url)} 
-                      initialLogoUrl={formData.fotoUrl} 
                     />
                   </div>
                 </div>

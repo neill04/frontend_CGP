@@ -6,7 +6,6 @@ import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { useDelegados } from "../../hooks/Academia/useDelegado";
 import { DelegadoDTO } from "../../api/delegadoApi";
-import FileInputDelegado from "../form/form-elements/Academia/FileInputDelegado";
 
 interface DelegadoInfoCardProps {
   academiaId: string;
@@ -177,11 +176,6 @@ export default function DelegadoInfoCard({ academiaId, delegadoId }: DelegadoInf
                   <div className="col-span-2">
                     <Label>Fecha de nacimiento</Label>
                     <Input type="text" onChange={(e) => handleChange("fechaNacimiento", e.target.value)} value={formData.fechaNacimiento || ""} />
-                  </div>
-
-                  <div className="col-span-2">
-                    <Label>Foto del Delegado</Label>
-                    <FileInputDelegado onChange={(url) => handleChange("fotoUrl", url)} initialLogoUrl={formData.fotoUrl} />
                   </div>
                 </div>
               </div>
