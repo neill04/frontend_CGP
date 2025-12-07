@@ -5,7 +5,6 @@ import PageMeta from "../../components/common/PageMeta";
 import { DelegadoDTO } from "../../api/delegadoApi";
 import { useDelegados } from "../../hooks/Academia/useDelegado";
 import DefaultDelegadoInputs from "../../components/form/form-elements/Academia/DefaultDelegadoInputs";
-import FileInputDelegado from "../../components/form/form-elements/Academia/FileInputDelegado";
 
 export default function DelegadoInfo() {
     const { academiaId, delegadoId } = useParams<{ academiaId: string; delegadoId: string }>();
@@ -73,10 +72,6 @@ export default function DelegadoInfo() {
                          onChange={handleChange}
                          initialData={formData}
                          isEdit={isEdit}
-                        />
-                        <FileInputDelegado
-                            onChange={(url) => handleChange("fotoUrl", url)}
-                            initialLogoUrl={formData.fotoUrl}
                         />
 
                         {error && <p className="text-red-500">{error}</p>}

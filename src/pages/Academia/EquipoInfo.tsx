@@ -25,9 +25,9 @@ const formatDate = (dateString: string) => {
 
 export default function EquipoInfo() {
   const { academiaId, equipoId } = useParams<{ academiaId: string, equipoId: string }>();
-  const { getEquipo, downloadPlanilla, loading: equipoLoading, error: equipoError } = useEquipos(academiaId!);
+  const { getEquipo, downloadPlanilla, loading: equipoLoading} = useEquipos(academiaId!);
   const { jugadores, fetchJugadores } = useJugadores(academiaId!, equipoId!);
-  const { isAdmin, isAcademia } = useAuthContext();
+  const { isAdmin } = useAuthContext();
 
   const [equipo, setEquipo] = useState<EquipoDTO>({
     categoria: "",

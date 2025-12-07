@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { getDepartamentos, getProvincias, getDistritos, Ubicacion } from "../../api/ubicacionApi";
 
-export const useUbicacion = (initialDistritoId?: number | null) => {
+export const useUbicacion = () => {
   const [departamentos, setDepartamentos] = useState<Ubicacion[]>([]);
   const [provincias, setProvincias] = useState<Ubicacion[]>([]);
   const [distritos, setDistritos] = useState<Ubicacion[]>([]);

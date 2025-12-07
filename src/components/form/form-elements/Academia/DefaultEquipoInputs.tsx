@@ -9,7 +9,7 @@ interface DefaultEquipoInputsProps {
   isEdit?: boolean;
 }
 
-export default function DefaultEquipoInputs({ onChange, initialData, isEdit = false }: DefaultEquipoInputsProps) {
+export default function DefaultEquipoInputs({ onChange, initialData }: DefaultEquipoInputsProps) {
   return (
     <ComponentCard title="Datos del Equipo">
       <div className="space-y-6">

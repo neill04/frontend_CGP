@@ -3,7 +3,6 @@ import { useParams } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import DefaultAcademiaInputs from "../../components/form/form-elements/Academia/DefaultAcademiaInputs";
-import FileInputAcademia from "../../components/form/form-elements/Academia/FileInputAcademia";
 import { useAcademias } from "../../hooks/Academia/useAcademia";
 import { AcademiaDTO } from "../../api/academiaApi";
 
@@ -68,17 +67,6 @@ export default function FormAcademiaEdit() {
                             initialData={formData}
                             isEdit
                         />
-                        {/*
-                        <SelectAcademiaInputs
-                            onDistritoChange={setDistritoId}
-                            initialDistritoId={distritoId}
-                        />
-                        */}
-                        <FileInputAcademia
-                            onChange={(url) => handleChange("logoUrl", url)}
-                            initialLogoUrl={formData.logoUrl}
-                        />
-
                         {error && <p className="text-red-500">{error}</p>}
                         <button
                             type="submit"
