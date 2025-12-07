@@ -1,86 +1,164 @@
 import ComponentCard from "../../../common/ComponentCard";
 import Label from "../../Label";
 import Input from "../../input/InputField";
-import { EntrenadorDTO } from "../../../../api/entrenadorApi";
 import DatePicker from "../../date-picker";
+import { EntrenadorDTO } from "../../../../api/entrenadorApi";
 
 interface DefaultEntrenadorInputsProps {
   onChange: (field: keyof EntrenadorDTO, value: string) => void;
   initialData?: EntrenadorDTO;
-  isEdit?: boolean;
+  errors?: Partial<Record<keyof EntrenadorDTO, string>>;
 }
 
-export default function DefaultEntrenadorInputs({ onChange, initialData, isEdit = false }: DefaultEntrenadorInputsProps) {
+export default function DefaultEntrenadorInputs({ 
+  onChange, 
+  initialData, 
+  errors = {}
+}: DefaultEntrenadorInputsProps) {
   return (
     <ComponentCard title="Datos del Entrenador">
       <div className="space-y-6">
         <div>
-          <Label htmlFor="dni">Dni</Label>
+          <Label htmlFor="dni">
+            DNI <span className="text-red-500">*</span>
+          </Label>
           <Input 
             type="text" 
             id="dni" 
-            disabled={!isEdit}
             onChange={(e) => onChange("dni", e.target.value)}
             value={initialData?.dni || ""}
+            className={errors.dni ? "border-red-500 focus:border-red-500" : ""}
+            placeholder="Ej: 12345678"
+            maxLength={8}
           />
+          {errors.dni && (
+            <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.dni}
+            </p>
+          )}
         </div>
+
         <div>
-          <Label htmlFor="apellidos">Apellidos completos</Label>
+          <Label htmlFor="apellidos">
+            Apellidos completos <span className="text-red-500">*</span>
+          </Label>
           <Input 
             type="text" 
             id="apellidos" 
-            disabled={!isEdit}
             onChange={(e) => onChange("apellidos", e.target.value)}
             value={initialData?.apellidos || ""}
+            className={errors.apellidos ? "border-red-500 focus:border-red-500" : ""}
+            placeholder="Ej: García López"
           />
+          {errors.apellidos && (
+            <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.apellidos}
+            </p>
+          )}
         </div>
+
         <div>
-          <Label htmlFor="nombres">Nombres completos</Label>
+          <Label htmlFor="nombres">
+            Nombres completos <span className="text-red-500">*</span>
+          </Label>
           <Input 
             type="text" 
             id="nombres" 
-            disabled={!isEdit}
             onChange={(e) => onChange("nombres", e.target.value)}
             value={initialData?.nombres || ""}
+            className={errors.nombres ? "border-red-500 focus:border-red-500" : ""}
+            placeholder="Ej: Juan Carlos"
           />
+          {errors.nombres && (
+            <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.nombres}
+            </p>
+          )}
         </div>
+
         <div>
-          <Label htmlFor="licencia">Licencia de entrenador</Label>
+          <Label htmlFor="licencia">
+            Licencia de entrenador <span className="text-red-500">*</span>
+          </Label>
           <Input 
             type="text" 
             id="licencia" 
-            disabled={!isEdit}
             onChange={(e) => onChange("licencia", e.target.value)}
             value={initialData?.licencia || ""}
+            className={errors.licencia ? "border-red-500 focus:border-red-500" : ""}
+            placeholder="Ej: LIC-2024-001"
           />
+          {errors.licencia && (
+            <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.licencia}
+            </p>
+          )}
         </div>
+
         <div>
-          <Label htmlFor="telefono">Telefono</Label>
+          <Label htmlFor="telefono">
+            Teléfono <span className="text-red-500">*</span>
+          </Label>
           <Input 
-            type="text" 
+            type="tel" 
             id="telefono" 
-            disabled={!isEdit}
             onChange={(e) => onChange("telefono", e.target.value)}
             value={initialData?.telefono || ""}
+            className={errors.telefono ? "border-red-500 focus:border-red-500" : ""}
+            placeholder="Ej: 987654321"
+            maxLength={9}
           />
+          {errors.telefono && (
+            <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.telefono}
+            </p>
+          )}
         </div>
+
         <div>
-          <Label htmlFor="email">Correo electrónico</Label>
+          <Label htmlFor="email">
+            Correo electrónico <span className="text-red-500">*</span>
+          </Label>
           <Input 
-            type="text" 
+            type="email" 
             id="email" 
-            disabled={!isEdit}
-            placeholder="entrenador@example.com"
             onChange={(e) => onChange("email", e.target.value)}
             value={initialData?.email || ""}
+            className={errors.email ? "border-red-500 focus:border-red-500" : ""}
+            placeholder="entrenador@example.com"
           />
+          {errors.email && (
+            <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.email}
+            </p>
+          )}
         </div>
+
         <div>
-          <Label htmlFor="fechaNacimiento">Fecha de Nacimiento</Label>
+          <Label htmlFor="fechaNacimiento">
+            Fecha de Nacimiento <span className="text-red-500">*</span>
+          </Label>
           <DatePicker 
             id="fechaNacimiento"
             placeholder="Seleccione la fecha"
-            restrictAdult
             defaultDate={initialData?.fechaNacimiento}
             onChange={(selectedDates) => {
               const date = selectedDates[0];
@@ -88,7 +166,15 @@ export default function DefaultEntrenadorInputs({ onChange, initialData, isEdit 
                 onChange("fechaNacimiento", date.toISOString().split("T")[0]);
               }
             }}
-            />
+          />
+          {errors.fechaNacimiento && (
+            <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              {errors.fechaNacimiento}
+            </p>
+          )}
         </div>
       </div>
     </ComponentCard>

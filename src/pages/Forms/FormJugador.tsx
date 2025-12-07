@@ -1,80 +1,301 @@
 import { useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-import { useParams } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { useJugadores } from "../../hooks/Academia/useJugador";
 import { JugadorDTO } from "../../api/jugadorApi";
 import DefaultJugadorInputs from "../../components/form/form-elements/Academia/DefaultJugadorInputs";
-import FileInputJugador from "../../components/form/form-elements/Academia/FileInputJugador";
-import SelectApoderadoInputs from "../../components/form/form-elements/Academia/SelectApoderadoInputs";
+
+type ToastType = "success" | "error" | "info";
 
 export default function FormJugador() {
   const { academiaId, equipoId } = useParams<{ academiaId: string, equipoId: string }>();
+  const navigate = useNavigate();
   const { registerJugador, loading, error } = useJugadores(academiaId!, equipoId!);
-
-  const [ formData, setFormData ] = useState<JugadorDTO>({
+  
+  const [formData, setFormData] = useState<JugadorDTO>({
     dni: "",
     apellidos: "",
     nombres: "",
     fechaNacimiento: "",
-    fotoUrl: "",
-    apoderadoId: "",
+    numeroCamiseta: undefined,
   });
+
+  const [toast, setToast] = useState<{
+    show: boolean;
+    message: string;
+    type: ToastType;
+  }>({
+    show: false,
+    message: "",
+    type: "info"
+  });
+
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof JugadorDTO, string>>>({});
+
+  // Mostrar toast
+  const showToast = (message: string, type: ToastType) => {
+    setToast({ show: true, message, type });
+    setTimeout(() => {
+      setToast({ show: false, message: "", type: "info" });
+    }, 4000);
+  };
+
+  // Validación de campos
+  const validateForm = (): boolean => {
+    const errors: Partial<Record<keyof JugadorDTO, string>> = {};
+
+    if (!formData.dni || formData.dni.length < 8) {
+      errors.dni = "El DNI debe tener al menos 8 caracteres";
+    }
+
+    if (!formData.apellidos || formData.apellidos.trim().length < 2) {
+      errors.apellidos = "Los apellidos son requeridos";
+    }
+
+    if (!formData.nombres || formData.nombres.trim().length < 2) {
+      errors.nombres = "Los nombres son requeridos";
+    }
+
+    if (!formData.fechaNacimiento) {
+      errors.fechaNacimiento = "La fecha de nacimiento es requerida";
+    } else {
+      const fechaNac = new Date(formData.fechaNacimiento);
+      const hoy = new Date();
+      const edad = hoy.getFullYear() - fechaNac.getFullYear();
+      if (edad < 4 || edad > 100) {
+        errors.fechaNacimiento = "La edad debe estar entre 4 y 100 años";
+      }
+    }
+
+    if (formData.numeroCamiseta === undefined || formData.numeroCamiseta === null || formData.numeroCamiseta < 1 || formData.numeroCamiseta > 99) {
+      errors.numeroCamiseta = "El número de camiseta debe estar entre 1 y 99";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleChange = (field: keyof JugadorDTO, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Limpiar error del campo cuando el usuario empieza a escribir
+    if (formErrors[field]) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      showToast("Por favor corrige los errores en el formulario", "error");
+      return;
+    }
 
-    await registerJugador(formData);
-    alert("Jugador registrado con éxito");
+    setShowConfirmModal(true);
+  };
 
-    setFormData({
-      dni: "",
-      apellidos: "",
-      nombres: "",
-      fechaNacimiento: "",
-      fotoUrl: "",
-    });
+  const confirmSubmit = async () => {
+    setShowConfirmModal(false);
+    
+    try {
+      await registerJugador(formData);
+      showToast("¡Jugador registrado exitosamente!", "success");
+      
+      // Resetear formulario
+      setFormData({
+        dni: "",
+        apellidos: "",
+        nombres: "",
+        fechaNacimiento: "",
+        numeroCamiseta: undefined,
+      });
+      setFormErrors({});
+
+      // Opción: redirigir después de 2 segundos
+      setTimeout(() => {
+        // Puedes descomentar esto si quieres redirigir automáticamente
+        // navigate(`/academias/${academiaId}/equipos/${equipoId}`);
+      }, 2000);
+      
+    } catch (err) {
+      showToast("Error al registrar el jugador. Intenta nuevamente.", "error");
+    }
+  };
+
+  const handleCancel = () => {
+    navigate(`/academias/${academiaId}/equipos/${equipoId}`);
+  };
+
+  const isFormValid = () => {
+    return (
+      formData.dni &&
+      formData.apellidos &&
+      formData.nombres &&
+      formData.fechaNacimiento &&
+      formData.numeroCamiseta !== undefined &&
+      formData.numeroCamiseta !== null &&
+      formData.numeroCamiseta > 0
+    );
   };
 
   return (
     <div>
       <PageMeta
-          title="Form Jugadores"
-          description="Página para registrar a los jugadores de la categoría"
+        title="Registrar Jugador"
+        description="Página para registrar a los jugadores de la categoría"
       />
+      
       <PageBreadcrumb pageTitle="Registrar Jugador" />
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <div className="space-y-6">
-            <DefaultJugadorInputs onChange={handleChange} initialData={formData} />
-            <FileInputJugador onChange={(url) => handleChange("fotoUrl", url)} />
-            <SelectApoderadoInputs 
-              equipoId={equipoId!}
-              onApoderadoChange={(apoderadoId) =>
-                handleChange("apoderadoId", apoderadoId ?? "")
-              } 
-              initialApoderadoId={formData.apoderadoId}
-            />
 
-            {error && <p className="text-red-500">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex select-none items-center gap-3 rounded-lg border border-black bg-white py-2 px-4 text-center align-middle font-sans text-xs font-bold uppercase text-black shadow-md shadow-black/40 transition-all hover:bg-black hover:text-white hover:shadow-lg hover:shadow-black-/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className="fixed top-4 right-4 z-50 animate-slide-in">
+          <div className={`rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[300px] ${
+            toast.type === "success" ? "bg-green-500 text-white" :
+            toast.type === "error" ? "bg-red-500 text-white" :
+            "bg-blue-500 text-white"
+          }`}>
+            {toast.type === "success" && (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-
-              {loading ? "Guardando..." : "Registrar Entrenador"}
+            )}
+            {toast.type === "error" && (
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            )}
+            <span className="flex-1">{toast.message}</span>
+            <button onClick={() => setToast({ ...toast, show: false })} className="hover:opacity-80">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
-        </div>   
-      </form>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Confirmar Registro</h3>
+            </div>
+            
+            <div className="mb-6 space-y-2 text-sm text-gray-700">
+              <p><strong>DNI:</strong> {formData.dni}</p>
+              <p><strong>Nombre completo:</strong> {formData.nombres} {formData.apellidos}</p>
+              <p><strong>Fecha de nacimiento:</strong> {new Date(formData.fechaNacimiento).toLocaleDateString()}</p>
+              <p><strong>Número de camiseta:</strong> {formData.numeroCamiseta}</p>
+            </div>
+
+            <p className="text-gray-600 mb-6">¿Estás seguro de que deseas registrar a este jugador?</p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmSubmit}
+                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+              >
+                Confirmar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-xl shadow-sm border p-6">
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-6">
+              <DefaultJugadorInputs 
+                onChange={handleChange} 
+                initialData={formData}
+                errors={formErrors}
+              />
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
+                  <svg className="w-5 h-5 text-red-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p className="text-red-700 text-sm">{error}</p>
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="flex-1 sm:flex-none px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
+                >
+                  Cancelar
+                </button>
+                
+                <button
+                  type="submit"
+                  disabled={loading || !isFormValid()}
+                  className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500"
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+                      </svg>
+                      Registrar Jugador
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="text-xs text-gray-500 text-center pt-2">
+                Los campos marcados son obligatorios
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

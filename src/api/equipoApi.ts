@@ -4,17 +4,25 @@ export interface EquipoDTO {
     id?: string;
     categoria: string;
     colorCamiseta: string;
+    totalJugadores?: number;
     fechaRegistro?: string;
     fechaActualizacion?: string;
     activo?: boolean;
     academiaId?: string;
     nombreAcademia?: string;
+    logoUrlAcademia?: string;
     entrenadorId?: string;
+    dniEntrenador: string;
     apellidosEntrenador: string;
     nombresEntrenador: string;
+    telefonoEntrenador: string;
+    fotoUrlEntrenador?: string;
     delegadoId?: string;
+    dniDelegado: string;
     apellidosDelegado: string;
     nombresDelegado: string;
+    telefonoDelegado: string;
+    fotoUrlDelegado?: string;
 }
 
 export const registrarEquipo = (academiaId: string, data: EquipoDTO) =>
@@ -28,3 +36,8 @@ export const buscarEquipo = (academiaId: string, id: string) =>
 
 export const listarEquiposPorAcademia = (academiaId: string) =>
     cliente.get<EquipoDTO[]>(`/api/academias/${academiaId}/equipos`);
+
+export const exportarPlanilla = (academiaId: string, equipoId: string) =>
+    cliente.get(`/api/academias/${academiaId}/equipos/${equipoId}/planilla`, {
+        responseType: "blob",
+    });

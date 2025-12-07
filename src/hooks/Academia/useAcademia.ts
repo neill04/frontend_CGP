@@ -55,10 +55,6 @@ export function useAcademias() {
         }
     };
 
-    useEffect(() => {
-        fetchAcademias();
-    }, []);
-
     return {
         academias,
         loading,

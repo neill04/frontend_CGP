@@ -13,7 +13,6 @@ type PropsType = {
   defaultDate?: DateOption;
   label?: string;
   placeholder?: string;
-  restrictAdult?: boolean;
 };
 
 export default function DatePicker({
@@ -23,27 +22,14 @@ export default function DatePicker({
   label,
   defaultDate,
   placeholder,
-  restrictAdult,
 }: PropsType) {
   useEffect(() => {
-    let maxDate: Date | string = "today";
-    if (restrictAdult) {
-      const today = new Date();
-      maxDate = new Date(
-        today.getFullYear() - 18,
-        today.getMonth(),
-        today.getDate()
-      );
-    }
-
     const flatPickr = flatpickr(`#${id}`, {
       mode: mode || "single",
       static: true,
       monthSelectorType: "static",
-      dateFormat: "d-m-Y",
+      dateFormat: "Y-m-d",
       defaultDate,
-      maxDate,
-      minDate: new Date(1950, 0, 1),
       onChange,
     });
 
@@ -52,7 +38,7 @@ export default function DatePicker({
         flatPickr.destroy();
       }
     };
-  }, [mode, onChange, id, defaultDate, restrictAdult]);
+  }, [mode, onChange, id, defaultDate]);
 
   return (
     <div>

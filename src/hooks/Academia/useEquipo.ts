@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { registrarEquipo, editarEquipo, buscarEquipo, listarEquiposPorAcademia, EquipoDTO } from "../../api/equipoApi";
+import { registrarEquipo, editarEquipo, buscarEquipo, listarEquiposPorAcademia, exportarPlanilla, EquipoDTO } from "../../api/equipoApi";
 
 export function useEquipos(academiaId: string) {
   const [equipos, setEquipos] = useState<EquipoDTO[]>([]);
@@ -59,6 +59,29 @@ export function useEquipos(academiaId: string) {
     }
   };
 
+  const downloadPlanilla = async (equipoId: string, fileName?: string) => {
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await exportarPlanilla(academiaId, equipoId);
+    const blob = new Blob([res.data], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    
+    link.download = fileName || "planilla_equipo.xlsx";
+    
+    link.click();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    setError("No se pudo descargar la planilla del equipo");
+  } finally {
+    setLoading(false);
+  }
+};
+
   return {
     equipos,
     loading,
@@ -67,5 +90,6 @@ export function useEquipos(academiaId: string) {
     registerEquipo,
     updateEquipo,
     getEquipo,
+    downloadPlanilla,
   };
 }

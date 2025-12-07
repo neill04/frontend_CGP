@@ -6,10 +6,11 @@ export interface JugadorDTO {
   apellidos: string;
   nombres: string;
   fechaNacimiento: string;
-  fotoUrl: string;
   activo?: boolean;
+  numeroCamiseta?: number;
+  nombreAcademia?: string;
   equipoId?: string;
-  apoderadoId?: string;
+  categoriaEquipo?: string;
 }
 
 export const registrarJugador = (academiaId: string, equipoId: string, data: JugadorDTO) =>
@@ -23,4 +24,7 @@ export const buscarJugador = (academiaId: string, equipoId: string, id: string) 
 
 export const listarJugadoresPorEquipo = (academiaId: string, equipoId: string) =>
   cliente.get<JugadorDTO[]>(`/api/academias/${academiaId}/equipos/${equipoId}/jugadores`);
+
+export const listarTodosLosJugadoresPorAcademia = (academiaId: string) =>
+  cliente.get<JugadorDTO[]>(`/api/academias/${academiaId}/jugadores`);
 

@@ -1,113 +1,104 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { Link, useLocation } from "react-router";
 
+
 import {
-  BoxCubeIcon,
-  CalenderIcon,
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
+  AcademiaIcon,
+  EquipoIcon,
+  EntrenadorIcon,
+  DelegadoIcon,
+  JugadorIcon
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-import SidebarWidget from "./SidebarWidget";
+import { useAuthContext } from "../context/AuthContext";
 
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  roles?: string[];
 };
-
-const navItems: NavItem[] = [
-  {
-    icon: <GridIcon />,
-    name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
-  },
-  
-  {
-    name: "Gestión de Academias",
-    icon: <ListIcon />,
-    subItems: [
-      { name: "Academias", path: "/academias", pro: false },
-    ],
-  },
-
-  {
-    name: "Academias",
-    icon: <ListIcon />,
-    subItems: [
-      { name: "EGB", path: "/equipo", pro: false },
-    ],
-  },
-  /*
-  {
-    name: "Tables",
-    icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  },
-  {
-    name: "Pages",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-    ],
-  },
-  */
-];
-
-/*
-const othersItems: NavItem[] = [
-  {
-    icon: <PieChartIcon />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
-  },
-  {
-    icon: <PlugInIcon />,
-    name: "Authentication",
-    subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
-    ],
-  },
-];
-*/
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { user, isAdmin, isAcademia } = useAuthContext();
   const location = useLocation();
 
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
   } | null>(null);
-  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
-    {}
-  );
+  const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>({});
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const navItems = useMemo<NavItem[]>(() => {
+    return [
+      ...(isAdmin()
+        ? [
+            {
+              icon: <GridIcon />,
+              name: "Dashboard",
+              path: "/",
+            },
+
+            {
+              name: "Academias",
+              icon: <AcademiaIcon className="w-5 h-5" />, 
+              path: "/academias",
+            },
+            {
+              name: "Equipos",
+              icon: <EquipoIcon className="w-5 h-5" />, 
+              path: "/equipos",
+            },
+            {
+              name: "Entrenadores",
+              icon: <EntrenadorIcon className="w-5 h-5" />, 
+              path: "/entrenadores",
+            },
+            {
+              name: "Delegados",
+              icon: <DelegadoIcon className="w-5 h-5" />, 
+              path: "/delegados",
+            },
+            {
+              name: "Jugadores",
+              icon: <JugadorIcon className="w-5 h-5" />, 
+              path: "/jugadores",
+            },
+          ]
+        : []),
+
+      ...(isAcademia() && user?.academiaId
+        ? [
+            {
+              name: "Equipos",
+              icon: <EquipoIcon className="w-5 h-5" />,
+              path: `/academias/${user.academiaId}`,
+            },
+            {
+              name: "Entrenadores",
+              icon: <EntrenadorIcon className="w-5 h-5" />,
+              path: `/academias/${user.academiaId}/entrenadores`,
+            },
+            {
+              name: "Delegados",
+              icon: <DelegadoIcon className="w-5 h-5" />,
+              path: `/academias/${user.academiaId}/delegados`,
+            },
+            {
+              name: "Jugadores",
+              icon: <JugadorIcon className="w-5 h-5" />,
+              path: `/academias/${user.academiaId}/jugadores`,
+            },
+          ]
+        : []),
+    ];
+  }, [user?.academiaId, isAdmin, isAcademia]);
 
   // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
@@ -117,34 +108,25 @@ const AppSidebar: React.FC = () => {
 
   useEffect(() => {
     let submenuMatched = false;
-    ["main"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : [];
-      items.forEach((nav, index) => {
-        if (nav.subItems) {
-          nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType as "main" | "others",
-                index,
-              });
-              submenuMatched = true;
-            }
-          });
+
+    navItems.forEach((nav, index) => {
+      nav.subItems?.forEach((subItem) => {
+        if (isActive(subItem.path)) {
+          setOpenSubmenu({ type: "main", index });
+          submenuMatched = true;
         }
       });
     });
 
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
-  }, [location, isActive]);
+    if (!submenuMatched) setOpenSubmenu(null);
+  }, [location.pathname, isActive, navItems]);
 
   useEffect(() => {
     if (openSubmenu !== null) {
       const key = `${openSubmenu.type}-${openSubmenu.index}`;
       if (subMenuRefs.current[key]) {
-        setSubMenuHeight((prevHeights) => ({
-          ...prevHeights,
+        setSubMenuHeight((prev) => ({
+          ...prev,
           [key]: subMenuRefs.current[key]?.scrollHeight || 0,
         }));
       }
@@ -152,16 +134,9 @@ const AppSidebar: React.FC = () => {
   }, [openSubmenu]);
 
   const handleSubmenuToggle = (index: number, menuType: "main" | "others") => {
-    setOpenSubmenu((prevOpenSubmenu) => {
-      if (
-        prevOpenSubmenu &&
-        prevOpenSubmenu.type === menuType &&
-        prevOpenSubmenu.index === index
-      ) {
-        return null;
-      }
-      return { type: menuType, index };
-    });
+    setOpenSubmenu((prev) =>
+      prev?.type === menuType && prev.index === index ? null : { type: menuType, index }
+    );
   };
 
   const renderMenuItems = (items: NavItem[], menuType: "main" | "others") => (
