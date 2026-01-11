@@ -6,11 +6,12 @@ export interface AcademiaDTO {
     nombreRepresentante: string;
     dniRepresentante: string;
     telefonoRepresentante: string;
+    liga: string;
     logoUrl: string;
     activo?: boolean;
     fechaRegistro?: string;
     fechaActualizacion?: string;
-    distritoId: number;
+    distritoId?: number;
     nombreDistrito?: string;
     totalEquipos?: number;
 }

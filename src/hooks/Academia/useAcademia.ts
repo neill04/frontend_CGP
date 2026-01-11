@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { registrarAcademia, editarAcademia, buscarAcademia, listarAcademias, AcademiaDTO } from "../../api/academiaApi";
+import { AxiosError } from "axios";
 
 export function useAcademias() {
     const [academias, setAcademias] = useState<AcademiaDTO[]>([]);
@@ -26,7 +27,16 @@ export function useAcademias() {
             await registrarAcademia(data);
             await fetchAcademias(); 
         } catch (err) {
-            setError("Error al registrar la academia");
+            const axiosError = err as AxiosError<{ message: string }>;
+
+            if (axiosError.response?.status === 400) {
+                const errorMessage = axiosError.response.data?.message || "Error de validación";
+                setError(errorMessage);
+                throw new Error(errorMessage);
+            } else {
+                setError("Error al registrar la academia");
+                throw new Error("Error al registrar la academia");
+            }
         } finally {
             setLoading(false);
         }
@@ -39,7 +49,16 @@ export function useAcademias() {
             await editarAcademia(id, data);
             await fetchAcademias(); // refresca lista
         } catch (err) {
-            setError("Error al editar la academia");
+            const axiosError = err as AxiosError<{ message: string }>;
+
+            if (axiosError.response?.status === 400) {
+                const errorMessage = axiosError.response.data?.message || "Error de validación";
+                setError(errorMessage);
+                throw new Error(errorMessage);
+            } else {
+                setError("Error al editar la academia");
+                throw new Error("Error al editar la academia");
+            }
         } finally {
             setLoading(false);
         }

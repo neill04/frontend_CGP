@@ -8,6 +8,7 @@ export interface JugadorDTO {
   fechaNacimiento: string;
   activo?: boolean;
   numeroCamiseta?: number;
+  fotoUrl?: string;
   nombreAcademia?: string;
   equipoId?: string;
   categoriaEquipo?: string;

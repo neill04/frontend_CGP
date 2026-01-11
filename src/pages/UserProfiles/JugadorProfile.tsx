@@ -3,14 +3,14 @@ import PageMeta from "../../components/common/PageMeta";
 import { useParams, useNavigate } from "react-router";
 import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { useDelegados } from "../../hooks/Academia/useDelegado";
-import { DelegadoDTO } from "../../api/delegadoApi";
+import { useJugadores } from "../../hooks/Academia/useJugador";
+import { JugadorDTO } from "../../api/jugadorApi";
 import { CLOUDINARY_FOLDERS, uploadToCloudinary } from "../../utils/uploadImage";
 
 type ToastType = "success" | "error" | "info";
 
 const getInitials = (nombres?: string, apellidos?: string) => {
-  if (!nombres && !apellidos) return "DL";
+  if (!nombres && !apellidos) return "JG";
   const n = nombres?.split(" ")[0] || "";
   const a = apellidos?.split(" ")[0] || "";
   return `${n[0] || ""}${a[0] || ""}`.toUpperCase();
@@ -49,17 +49,21 @@ const calculateAge = (dateString?: string) => {
   return age;
 };
 
-export default function DelegadoProfile() {
-  const { academiaId, delegadoId } = useParams<{ academiaId: string, delegadoId: string }>();
+export default function JugadorProfile() {
+  const { academiaId, equipoId, jugadorId } = useParams<{ 
+    academiaId: string; 
+    equipoId: string; 
+    jugadorId: string;
+  }>();
   const navigate = useNavigate();
-  const { getDelegado, updateDelegado } = useDelegados(academiaId!);
+  const { getJugador, updateJugador } = useJugadores(academiaId!, equipoId!);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
-  const [delegado, setDelegado] = useState<DelegadoDTO | null>(null);
+  const [jugador, setJugador] = useState<JugadorDTO | null>(null);
 
   // Refs para fecha
   const dayRef = useRef<HTMLInputElement>(null);
@@ -83,7 +87,7 @@ export default function DelegadoProfile() {
     formState: { errors, isSubmitting },
     reset,
     setValue,
-  } = useForm<DelegadoDTO>({
+  } = useForm<JugadorDTO>({
     mode: "onChange",
   });
 
@@ -95,46 +99,46 @@ export default function DelegadoProfile() {
   };
 
   useEffect(() => {
-    const fetchDelegadoData = async () => {
+    const fetchJugadorData = async () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await getDelegado(delegadoId!);
+        const data = await getJugador(jugadorId!);
         if (data) {
-          setDelegado(data);
+          setJugador(data);
         }
       } catch (err) {
-        setError("Error al cargar la información del delegado");
+        setError("Error al cargar la información del jugador");
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-    fetchDelegadoData();
-  }, [delegadoId]);
+    fetchJugadorData();
+  }, [jugadorId]);
 
   useEffect(() => {
-    if (showEditModal && delegado?.fechaNacimiento) {
-      const [year, month, day] = delegado.fechaNacimiento.split('-');
+    if (showEditModal && jugador?.fechaNacimiento) {
+      const [year, month, day] = jugador.fechaNacimiento.split('-');
       
       if (dayRef.current) dayRef.current.value = day.padStart(2, "0");
       if (monthRef.current) monthRef.current.value = month.padStart(2, "0");
       if (yearRef.current) yearRef.current.value = year;
     }
-  }, [showEditModal, delegado?.fechaNacimiento]);
+  }, [showEditModal, jugador?.fechaNacimiento]);
 
   const handleEditClick = () => {
-    if (!delegado) return;
+    if (!jugador) return;
     
     // Resetear form con datos actuales
-    reset(delegado);
-    setPreviewUrl(delegado.fotoUrl || "");
+    reset(jugador);
+    setPreviewUrl(jugador.fotoUrl || "");
     
     setShowEditModal(true);
     
     setTimeout(() => {
-      if (delegado.fechaNacimiento) {
-        const [year, month, day] = delegado.fechaNacimiento.split('-');
+      if (jugador.fechaNacimiento) {
+        const [year, month, day] = jugador.fechaNacimiento.split('-');
         
         if (dayRef.current) dayRef.current.value = day.padStart(2, "0");
         if (monthRef.current) monthRef.current.value = month.padStart(2, "0");
@@ -207,26 +211,26 @@ export default function DelegadoProfile() {
     const mes = hoy.getMonth() - fechaNac.getMonth();
     
     if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
-      return edad - 1 >= 18 && edad - 1 <= 100 ? true : "La edad debe estar entre 18 y 100 años";
+      return edad - 1 >= 5 && edad - 1 <= 50 ? true : "La edad debe estar entre 5 y 50 años";
     }
     
-    return edad >= 18 && edad <= 100 ? true : "La edad debe estar entre 18 y 100 años";
+    return edad >= 5 && edad <= 50 ? true : "La edad debe estar entre 5 y 50 años";
   };
 
-  const onSubmit = async (data: DelegadoDTO) => {
+  const onSubmit = async (data: JugadorDTO) => {
     try {
       showToast("Actualizando información...", "info");
 
       // Subir nueva foto si se seleccionó
       let fotoUrl = data.fotoUrl;
       if (selectedFile) {
-        fotoUrl = await uploadToCloudinary(selectedFile, CLOUDINARY_FOLDERS.DELEGADOS);
+        fotoUrl = await uploadToCloudinary(selectedFile, CLOUDINARY_FOLDERS.JUGADORES);
       }
 
       const updatedData = { ...data, fotoUrl };
-      await updateDelegado(delegadoId!, updatedData);
+      await updateJugador(jugadorId!, updatedData);
       
-      setDelegado(updatedData);
+      setJugador(updatedData);
       setShowEditModal(false);
       setSelectedFile(null);
       showToast("¡Información actualizada exitosamente!", "success");
@@ -240,8 +244,8 @@ export default function DelegadoProfile() {
   if (loading) {
     return (
       <>
-        <PageMeta title="Cargando..." description="Cargando perfil del delegado" />
-        <PageBreadcrumb pageTitle="Perfil del Delegado" />
+        <PageMeta title="Cargando..." description="Cargando perfil del jugador" />
+        <PageBreadcrumb pageTitle="Perfil del Jugador" />
         <div className="space-y-6 animate-pulse">
           <div className="rounded-2xl border border-gray-200 bg-gray-200 h-64"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -254,17 +258,17 @@ export default function DelegadoProfile() {
   }
 
   // Error State
-  if (error || !delegado) {
+  if (error || !jugador) {
     return (
       <>
         <PageMeta title="Error" description="Error al cargar perfil" />
-        <PageBreadcrumb pageTitle="Perfil del Delegado" />
+        <PageBreadcrumb pageTitle="Perfil del Jugador" />
         <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
           <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <h2 className="text-xl font-bold text-red-900 mb-2">Error al cargar</h2>
-          <p className="text-red-700 mb-4">{error || "No se encontró el delegado"}</p>
+          <p className="text-red-700 mb-4">{error || "No se encontró el jugador"}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
@@ -276,15 +280,15 @@ export default function DelegadoProfile() {
     );
   }
 
-  const edad = calculateAge(delegado.fechaNacimiento);
+  const edad = calculateAge(jugador.fechaNacimiento);
 
   return (
     <>
       <PageMeta
-        title={`${delegado.nombres} ${delegado.apellidos} - Perfil`}
-        description="Información completa del delegado"
+        title={`${jugador.nombres} ${jugador.apellidos} - Perfil`}
+        description="Información completa del jugador"
       />
-      <PageBreadcrumb pageTitle="Perfil del Delegado" />
+      <PageBreadcrumb pageTitle="Perfil del Jugador" />
 
       {/* Toast Notification */}
       {toast.show && (
@@ -350,15 +354,15 @@ export default function DelegadoProfile() {
 
             <div className="mb-6">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                  <svg className="w-6 h-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
                 </div>
                 <h3 className="text-2xl font-semibold text-gray-800">Editar Información</h3>
               </div>
               <p className="text-sm text-gray-500 ml-15">
-                Actualiza los datos del delegado
+                Actualiza los datos del jugador
               </p>
             </div>
 
@@ -366,16 +370,16 @@ export default function DelegadoProfile() {
               {/* Foto */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Foto del Delegado
+                  Foto del Jugador
                 </label>
                 {!previewUrl ? (
                   <label className="cursor-pointer block">
-                    <div className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition">
+                    <div className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition">
                       <div className="text-center">
                         <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                         </svg>
-                        <p className="mt-2 text-sm text-gray-600">Click para cambiar foto</p>
+                        <p className="mt-2 text-sm text-gray-600">Click para subir foto</p>
                         <p className="mt-1 text-xs text-gray-500">PNG, JPG hasta 5MB</p>
                       </div>
                     </div>
@@ -437,7 +441,7 @@ export default function DelegadoProfile() {
                         message: "Solo se permiten letras",
                       },
                     })}
-                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-purple-500 transition ${
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 transition ${
                       errors.nombres ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
@@ -459,7 +463,7 @@ export default function DelegadoProfile() {
                         message: "Solo se permiten letras",
                       },
                     })}
-                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-purple-500 transition ${
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 transition ${
                       errors.apellidos ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
@@ -482,7 +486,7 @@ export default function DelegadoProfile() {
                         message: "Debe tener 8 dígitos",
                       },
                     })}
-                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-purple-500 transition ${
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 transition ${
                       errors.dni ? 'border-red-500' : 'border-gray-300'
                     }`}
                   />
@@ -543,46 +547,29 @@ export default function DelegadoProfile() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Teléfono <span className="text-red-500">*</span>
+                    Número de Camiseta
                   </label>
                   <input
-                    type="tel"
-                    maxLength={9}
-                    {...register("telefono", {
-                      required: "El teléfono es requerido",
-                      pattern: {
-                        value: /^[0-9]{9}$/,
-                        message: "Debe tener 9 dígitos",
+                    type="number"
+                    min="1"
+                    max="99"
+                    {...register("numeroCamiseta", {
+                      min: {
+                        value: 1,
+                        message: "Debe ser mayor a 0",
+                      },
+                      max: {
+                        value: 99,
+                        message: "Debe ser menor a 100",
                       },
                     })}
-                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-purple-500 transition ${
-                      errors.telefono ? 'border-red-500' : 'border-gray-300'
+                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 transition ${
+                      errors.numeroCamiseta ? 'border-red-500' : 'border-gray-300'
                     }`}
+                    placeholder="Ej: 10"
                   />
-                  {errors.telefono && (
-                    <p className="mt-1 text-sm text-red-600">{errors.telefono.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    {...register("email", {
-                      required: "El email es requerido",
-                      pattern: {
-                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                        message: "Email no válido",
-                      },
-                    })}
-                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-purple-500 transition ${
-                      errors.email ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  />
-                  {errors.email && (
-                    <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                  {errors.numeroCamiseta && (
+                    <p className="mt-1 text-sm text-red-600">{errors.numeroCamiseta.message}</p>
                   )}
                 </div>
               </div>
@@ -603,7 +590,7 @@ export default function DelegadoProfile() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-2.5 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition disabled:opacity-50"
+                  className="flex-1 px-6 py-2.5 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition disabled:opacity-50"
                 >
                   {isSubmitting ? "Guardando..." : "Guardar Cambios"}
                 </button>
@@ -617,35 +604,37 @@ export default function DelegadoProfile() {
         {/* Header Card - Foto y Nombre Principal */}
         <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-sm">
           {/* Banner Superior */}
-          <div className="h-32 bg-gradient-to-r from-purple-500 to-purple-600"></div>
+          <div className="h-32 bg-gradient-to-r from-blue-500 to-blue-600"></div>
           
           <div className="px-6 pb-6">
             <div className="flex flex-col md:flex-row md:items-end md:justify-between -mt-16">
               {/* Foto de perfil */}
               <div className="flex flex-col md:flex-row items-center md:items-end gap-4">
                 <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-xl flex-shrink-0 bg-white">
-                  {delegado.fotoUrl ? (
+                  {jugador.fotoUrl ? (
                     <img 
-                      src={delegado.fotoUrl} 
-                      alt={`${delegado.nombres} ${delegado.apellidos}`}
+                      src={jugador.fotoUrl} 
+                      alt={`${jugador.nombres} ${jugador.apellidos}`}
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white text-4xl font-bold">
-                      {getInitials(delegado.nombres, delegado.apellidos)}
+                    <div className="w-full h-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-4xl font-bold">
+                      {getInitials(jugador.nombres, jugador.apellidos)}
                     </div>
                   )}
                 </div>
 
                 <div className="text-center md:text-left mb-4 md:mb-0">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-1">
-                    {delegado.nombres} {delegado.apellidos}
-                  </h1>
+                  <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+                    <h1 className="text-3xl font-bold text-gray-900">
+                      {jugador.nombres} {jugador.apellidos}
+                    </h1>
+                  </div>
                   <p className="text-gray-600 flex items-center justify-center md:justify-start gap-2">
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    Delegado de {delegado.nombreAcademia}
+                    {jugador.categoriaEquipo || "Jugador"} - {jugador.nombreAcademia}
                   </p>
                   {edad && (
                     <p className="text-sm text-gray-500 mt-1">{edad} años</p>
@@ -657,7 +646,7 @@ export default function DelegadoProfile() {
               <div className="flex gap-2 justify-center md:justify-end">
                 <button
                   onClick={handleEditClick}
-                  className="inline-flex items-center gap-2 rounded-lg bg-purple-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-purple-600 transition shadow-sm"
+                  className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-600 transition shadow-sm"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -680,46 +669,10 @@ export default function DelegadoProfile() {
 
         {/* Grid de Información */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Información de Contacto */}
-          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              Información de Contacto
-            </h3>
-            
-            <div className="space-y-4">
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <svg className="w-5 h-5 text-gray-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs text-gray-500 mb-0.5">Email</p>
-                  <p className="text-sm font-medium text-gray-800 break-all">
-                    {delegado.email || "No registrado"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <svg className="w-5 h-5 text-gray-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-                <div>
-                  <p className="text-xs text-gray-500 mb-0.5">Teléfono</p>
-                  <p className="text-sm font-medium text-gray-800">
-                    {delegado.telefono || "No registrado"}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Información Personal */}
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
               Información Personal
@@ -732,7 +685,7 @@ export default function DelegadoProfile() {
                 </svg>
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">DNI</p>
-                  <p className="text-sm font-medium text-gray-800">{delegado.dni}</p>
+                  <p className="text-sm font-medium text-gray-800">{jugador.dni}</p>
                 </div>
               </div>
 
@@ -743,12 +696,118 @@ export default function DelegadoProfile() {
                 <div>
                   <p className="text-xs text-gray-500 mb-0.5">Fecha de Nacimiento</p>
                   <p className="text-sm font-medium text-gray-800">
-                    {formatDate(delegado.fechaNacimiento)}
+                    {formatDate(jugador.fechaNacimiento)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <svg className="w-5 h-5 text-gray-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <p className="text-xs text-gray-500 mb-0.5">Edad</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {edad ? `${edad} años` : "No disponible"}
                   </p>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Información del Equipo */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Equipo Actual
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <svg className="w-5 h-5 text-gray-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <div>
+                  <p className="text-xs text-gray-500 mb-0.5">Academia</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {jugador.nombreAcademia || "No asignado"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                <svg className="w-5 h-5 text-gray-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <div>
+                  <p className="text-xs text-gray-500 mb-0.5">Categoría</p>
+                  <p className="text-sm font-medium text-gray-800">
+                    {jugador.categoriaEquipo || "No asignado"}
+                  </p>
+                </div>
+              </div>
+
+              {jugador.numeroCamiseta && (
+                <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                  <div>
+                    <p className="text-xs text-blue-600 mb-0.5">Número de Camiseta</p>
+                    <p className="text-2xl font-bold text-blue-700">#{jugador.numeroCamiseta}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Historial de Equipos - Preparado para el futuro */}
+        <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <svg className="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Historial de Equipos
+          </h3>
+
+          {/* Estado vacío - Preparado para futura implementación */}
+          <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+            <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            <h4 className="text-lg font-medium text-gray-900 mb-2">
+              Historial no disponible
+            </h4>
+            <p className="text-sm text-gray-500 max-w-md mx-auto">
+              El historial de equipos del jugador se mostrará aquí una vez implementado. 
+              Incluirá equipos anteriores, fechas de participación y estadísticas.
+            </p>
+          </div>
+
+          {/* Estructura de ejemplo para cuando se implemente */}
+          {/* 
+          <div className="space-y-4">
+            {equiposHistoricos.map((equipo) => (
+              <div key={equipo.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold">
+                  {equipo.numeroCamiseta}
+                </div>
+                <div className="flex-1">
+                  <h5 className="font-semibold text-gray-900">{equipo.nombre}</h5>
+                  <p className="text-sm text-gray-500">{equipo.categoria} - {equipo.temporada}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">
+                    {equipo.fechaInicio} - {equipo.fechaFin || 'Actual'}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          */}
         </div>
       </div>
 

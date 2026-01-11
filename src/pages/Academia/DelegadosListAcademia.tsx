@@ -125,21 +125,6 @@ export default function DelegadosListAcademia() {
                 key={del.id}
                 className="relative bg-white border rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all"
               >
-                {/* Botón Editar */}
-                <Link
-                  to={`/academias/${academiaId}/delegados/${del.id}`}
-                  className="absolute top-3 right-3 bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-full shadow-sm transition z-10"
-                  title="Editar Delegado"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
-                  </svg>
-                </Link>
 
                 {/* Foto o Iniciales */}
                 <div className="w-20 h-20 mx-auto rounded-full overflow-hidden shadow-md">
@@ -160,23 +145,6 @@ export default function DelegadosListAcademia() {
                 <h4 className="text-center font-bold text-lg mt-3">
                   {del.nombres} {del.apellidos}
                 </h4>
-
-                {/* Badge de estado (si existe) */}
-                {/*
-                {del.activo !== undefined && (
-                  <div className="text-center mt-2">
-                    <span
-                      className={`text-xs px-3 py-1 rounded-full font-medium ${
-                        del.activo
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {del.activo ? "Activo" : "Inactivo"}
-                    </span>
-                  </div>
-                )}
-                */}
 
                 {/* Datos del delegado */}
                 <div className="mt-4 text-sm text-gray-700 space-y-2 bg-gray-50 rounded-lg p-3">
@@ -206,7 +174,7 @@ export default function DelegadosListAcademia() {
 
                 {/* Ver Delegado */}
                 <Link
-                  to={`/delegados/${del.id}`}
+                  to={`/academias/${academiaId}/delegados/${del.id}`}
                   className="mt-4 block w-full text-center bg-gray-900 hover:bg-black text-white border rounded-xl py-2.5 text-sm font-medium transition"
                 >
                   Ver detalles →

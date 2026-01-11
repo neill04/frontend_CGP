@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useAdmin } from "../hooks/useAdmin";
-import { Link } from "react-router";
 import PageMeta from "../components/common/PageMeta";
 
 const getInitials = (nombres?: string, apellidos?: string) => {
@@ -53,16 +52,6 @@ export default function DelegadosList() {
       del.apellidos?.toLowerCase().includes(searchLower) ||
       del.dni?.toLowerCase().includes(searchLower) ||
       del.nombreAcademia?.toLowerCase().includes(searchLower);
-
-    // Filtro por estado
-    /*
-    const matchesStatus = 
-      filterStatus === "all" ||
-      (filterStatus === "active" && del.activo) ||
-      (filterStatus === "inactive" && !del.activo);
-    */
-
-    //return matchesSearch && matchesStatus;
     return matchesSearch;
   });
 
@@ -167,6 +156,7 @@ export default function DelegadosList() {
             </div>
 
             {/* Filtros de estado y botón limpiar */}
+            {/*
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-sm text-gray-600 font-medium">Estado:</span>
               
@@ -203,7 +193,6 @@ export default function DelegadosList() {
                 </button>
               </div>
 
-              {/* Botón limpiar filtros */}
               {hasActiveFilters && (
                 <button
                   onClick={handleClearFilters}
@@ -216,6 +205,7 @@ export default function DelegadosList() {
                 </button>
               )}
             </div>
+            */}
 
             {/* Indicadores de filtros activos */}
             {hasActiveFilters && (
@@ -282,22 +272,6 @@ export default function DelegadosList() {
                 key={del.id}
                 className="relative bg-white border rounded-2xl p-5 shadow-sm hover:shadow-lg transition-all flex flex-col h-full"
               >
-                {/* Botón Editar */}
-                <Link
-                  to={`/delegados/edit/${del.id}`}
-                  className="absolute top-3 right-3 bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-full shadow-sm transition z-10"
-                  title="Editar Delegado"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
-                  </svg>
-                </Link>
-
                 {/* Foto o Iniciales */}
                 <div className="w-20 h-20 mx-auto rounded-full overflow-hidden shadow-md flex-shrink-0">
                   {del.fotoUrl ? (
@@ -323,22 +297,6 @@ export default function DelegadosList() {
                   {del.nombreAcademia || "Sin academia asignada"}
                 </p>
 
-                {/*
-                {del.activo !== undefined && (
-                  <div className="text-center mt-2 flex-shrink-0">
-                    <span
-                      className={`text-xs px-3 py-1 rounded-full font-medium ${
-                        del.activo
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {del.activo ? "Activo" : "Inactivo"}
-                    </span>
-                  </div>
-                )}
-                */}
-
                 {/* Datos del delegado - Crece para ocupar espacio */}
                 <div className="mt-4 text-sm text-gray-700 space-y-2 bg-gray-50 rounded-lg p-3 flex-grow">
                   <div className="flex items-start gap-2">
@@ -363,13 +321,6 @@ export default function DelegadosList() {
                     </svg>
                     <p><strong>Teléfono:</strong> {del.telefono || "No registrado"}</p>
                   </div>
-
-                  <div className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p><strong>Nacimiento:</strong> {formatDate(del.fechaNacimiento)}</p>
-                  </div>
                 </div>
 
                 {/* Fecha de registro - Altura fija */}
@@ -380,14 +331,6 @@ export default function DelegadosList() {
                     </p>
                   )}
                 </div>
-
-                {/* Ver Delegado - Siempre al final */}
-                <Link
-                  to={`/delegados/${del.id}`}
-                  className="mt-4 block w-full text-center bg-gray-900 hover:bg-black text-white border rounded-xl py-2.5 text-sm font-medium transition flex-shrink-0"
-                >
-                  Ver detalles →
-                </Link>
               </div>
             ))}
           </div>

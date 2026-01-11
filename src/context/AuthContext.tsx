@@ -8,6 +8,7 @@ export interface UserInfo {
   academiaId?: string;
   logoUrl?: string;
   nombreAcademia?: string;
+  activo?: boolean;
 }
 
 export interface LoginRequest {

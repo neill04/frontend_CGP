@@ -29,40 +29,6 @@ export const useUbicacion = () => {
     fetchDepartamentos();
   }, []);
 
-  /*
-  useEffect(() => {
-    const loadInitialUbicacion = async () => {
-      if (initialDistritoId) {
-        setLoading(true);
-        try {
-          // Obtiene los IDs de departamento y provincia a partir del ID de distrito
-          const res = await buscarUbicacionPorDistrito(initialDistritoId);
-          const { departamentoId, provinciaId, distritoId } = res.data;
-
-          // Carga las provincias del departamento
-          const provinciasRes = await getProvincias(departamentoId);
-          setProvincias(provinciasRes.data);
-          
-          // Carga los distritos de la provincia
-          const distritosRes = await getDistritos(provinciaId);
-          setDistritos(distritosRes.data);
-
-          // Establece los valores seleccionados
-          setSelectedDepartamento(departamentoId);
-          setSelectedProvincia(provinciaId);
-          setSelectedDistrito(distritoId);
-          
-        } catch (err) {
-          setError("Error al cargar la ubicación inicial");
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-    loadInitialUbicacion();
-  }, [initialDistritoId]); // Se ejecuta solo si el ID inicial cambia
-
-  */
 
   const onDepartamentoChange = (id: number) => {
     setSelectedDepartamento(id);

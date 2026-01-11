@@ -423,7 +423,7 @@ export default function EquipoInfo() {
 
                 {isAdmin() && (
                   <Link
-                  to={`/jugadores/${jug.id}`}
+                  to={`/academias/${academiaId}/equipos/${equipoId}/jugadores/${jug.id}`}
                   className="mt-4 block w-full text-center bg-gray-900 hover:bg-black text-white border rounded-xl py-2.5 text-sm font-medium transition"
                   >
                   Ver detalles →

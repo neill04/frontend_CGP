@@ -31,8 +31,8 @@ export function useEntrenadores(academiaId: string) {
     try {
       await registrarEntrenador(academiaId, data);
       await fetchEntrenadores();
-    } catch (err) {
-      setError("Hubo un error al registrar al entrenador.");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Hubo un error al registrar al entrenador.");
     } finally {
       setLoading(false);
     }

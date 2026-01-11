@@ -46,6 +46,12 @@ const AppSidebar: React.FC = () => {
             },
 
             {
+              name: "Gestión de usuarios",
+              icon: <AcademiaIcon className="w-5 h-5" />, 
+              path: "/users",
+            },
+
+            {
               name: "Academias",
               icon: <AcademiaIcon className="w-5 h-5" />, 
               path: "/academias",

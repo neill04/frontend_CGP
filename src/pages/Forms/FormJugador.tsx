@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useRef, useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { useParams, useNavigate } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-import { useParams, useNavigate } from "react-router";
+import ComponentCard from "../../components/common/ComponentCard";
 import { useJugadores } from "../../hooks/Academia/useJugador";
 import { JugadorDTO } from "../../api/jugadorApi";
-import DefaultJugadorInputs from "../../components/form/form-elements/Academia/DefaultJugadorInputs";
+import { CLOUDINARY_FOLDERS, uploadToCloudinary } from "../../utils/uploadImage";
 
 type ToastType = "success" | "error" | "info";
 
@@ -12,15 +14,18 @@ export default function FormJugador() {
   const { academiaId, equipoId } = useParams<{ academiaId: string, equipoId: string }>();
   const navigate = useNavigate();
   const { registerJugador, loading, error } = useJugadores(academiaId!, equipoId!);
-  
-  const [formData, setFormData] = useState<JugadorDTO>({
-    dni: "",
-    apellidos: "",
-    nombres: "",
-    fechaNacimiento: "",
-    numeroCamiseta: undefined,
-  });
 
+  // Refs para los campos de fecha
+  const dayRef = useRef<HTMLInputElement>(null);
+  const monthRef = useRef<HTMLInputElement>(null);
+  const yearRef = useRef<HTMLInputElement>(null);
+
+  // Estados locales
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [lastError, setLastError] = useState<string | null>(null);
+  const [isRegistering, setIsRegistering] = useState(false); // ⭐ Flag para saber si estamos registrando
   const [toast, setToast] = useState<{
     show: boolean;
     message: string;
@@ -31,8 +36,26 @@ export default function FormJugador() {
     type: "info"
   });
 
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof JugadorDTO, string>>>({});
+  // Configuración de react-hook-form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting, isValid },
+    reset,
+    watch,
+    setValue,
+    getValues,
+  } = useForm<JugadorDTO>({
+    defaultValues: {
+      dni: "",
+      apellidos: "",
+      nombres: "",
+      fechaNacimiento: "",
+      numeroCamiseta: undefined,
+      fotoUrl: "",
+    },
+    mode: "onChange",
+  });
 
   // Mostrar toast
   const showToast = (message: string, type: ToastType) => {
@@ -42,106 +65,160 @@ export default function FormJugador() {
     }, 4000);
   };
 
-  // Validación de campos
-  const validateForm = (): boolean => {
-    const errors: Partial<Record<keyof JugadorDTO, string>> = {};
-
-    if (!formData.dni || formData.dni.length < 8) {
-      errors.dni = "El DNI debe tener al menos 8 caracteres";
+  useEffect(() => {
+    if (error && error !== lastError) {
+      showToast(error, "error");
+      setLastError(error); 
     }
+  }, [error]);
 
-    if (!formData.apellidos || formData.apellidos.trim().length < 2) {
-      errors.apellidos = "Los apellidos son requeridos";
+  useEffect(() => {
+    // Si terminó de cargar Y estábamos registrando
+    if (!loading && isRegistering) {
+      setIsRegistering(false); // Resetear flag
+      
+      // Si NO hay error, entonces fue exitoso
+      if (!error) {
+        showToast("¡Jugador registrado exitosamente!", "success");
+        
+        // Resetear formulario
+        reset();
+        setSelectedFile(null);
+        setPreviewUrl("");
+        if (dayRef.current) dayRef.current.value = "";
+        if (monthRef.current) monthRef.current.value = "";
+        if (yearRef.current) yearRef.current.value = "";
+
+        // Redirigir después de 2 segundos
+        setTimeout(() => {
+          navigate(-1);
+        }, 2000);
+      }
+      // Si hay error, ya se mostró en el useEffect anterior
     }
+  }, [loading, isRegistering, error]);
 
-    if (!formData.nombres || formData.nombres.trim().length < 2) {
-      errors.nombres = "Los nombres son requeridos";
-    }
+  // Handlers para campos de fecha con auto-avance
+  const handleDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "");
+    e.target.value = value;
 
-    if (!formData.fechaNacimiento) {
-      errors.fechaNacimiento = "La fecha de nacimiento es requerida";
-    } else {
-      const fechaNac = new Date(formData.fechaNacimiento);
-      const hoy = new Date();
-      const edad = hoy.getFullYear() - fechaNac.getFullYear();
-      if (edad < 4 || edad > 100) {
-        errors.fechaNacimiento = "La edad debe estar entre 4 y 100 años";
+    if (value.length === 2) {
+      const day = parseInt(value);
+      if (day >= 1 && day <= 31) {
+        monthRef.current?.focus();
       }
     }
-
-    if (formData.numeroCamiseta === undefined || formData.numeroCamiseta === null || formData.numeroCamiseta < 1 || formData.numeroCamiseta > 99) {
-      errors.numeroCamiseta = "El número de camiseta debe estar entre 1 y 99";
-    }
-
-    setFormErrors(errors);
-    return Object.keys(errors).length === 0;
   };
 
-  const handleChange = (field: keyof JugadorDTO, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    // Limpiar error del campo cuando el usuario empieza a escribir
-    if (formErrors[field]) {
-      setFormErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
+  const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "");
+    e.target.value = value;
+
+    if (value.length === 2) {
+      const month = parseInt(value);
+      if (month >= 1 && month <= 12) {
+        yearRef.current?.focus();
+      }
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "");
+    e.target.value = value;
+  };
+
+  // Combinar día, mes y año en una fecha completa
+  const updateFechaNacimiento = () => {
+    const day = dayRef.current?.value.padStart(2, "0");
+    const month = monthRef.current?.value.padStart(2, "0");
+    const year = yearRef.current?.value;
+
+    if (day && month && year && year.length === 4) {
+      const fecha = `${year}-${month}-${day}`;
+      setValue("fechaNacimiento", fecha, { shouldValidate: true });
+    }
+  };
+
+  // Handler para archivo de foto (OPCIONAL)
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validar tipo de archivo
+      if (!file.type.startsWith("image/")) {
+        showToast("Por favor selecciona una imagen válida", "error");
+        return;
+      }
+
+      // Validar tamaño (máximo 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        showToast("La imagen no debe superar los 5MB", "error");
+        return;
+      }
+
+      setSelectedFile(file);
+      const url = URL.createObjectURL(file);
+      setPreviewUrl(url);
+      setValue("fotoUrl", "temp"); // Valor temporal
+    }
+  };
+
+  // Handler para cancelar
+  const handleCancel = () => {
+    navigate(-1);
+  };
+
+  // Validación de edad (4-100 años para jugadores)
+  const validateAge = (fecha: string): boolean | string => {
+    if (!fecha) return "La fecha de nacimiento es requerida";
     
-    if (!validateForm()) {
-      showToast("Por favor corrige los errores en el formulario", "error");
-      return;
+    const fechaNac = new Date(fecha);
+    const hoy = new Date();
+    const edad = hoy.getFullYear() - fechaNac.getFullYear();
+    const mes = hoy.getMonth() - fechaNac.getMonth();
+    
+    if (mes < 0 || (mes === 0 && hoy.getDate() < fechaNac.getDate())) {
+      return edad - 1 >= 4 && edad - 1 <= 100 ? true : "La edad debe estar entre 4 y 100 años";
     }
+    
+    return edad >= 4 && edad <= 100 ? true : "La edad debe estar entre 4 y 100 años";
+  };
 
+  // Submit inicial - muestra modal de confirmación
+  const onSubmitForm = (data: JugadorDTO) => {
+    data;
     setShowConfirmModal(true);
   };
 
+  // Confirmación final del registro
   const confirmSubmit = async () => {
     setShowConfirmModal(false);
     
-    try {
-      await registerJugador(formData);
-      showToast("¡Jugador registrado exitosamente!", "success");
-      
-      // Resetear formulario
-      setFormData({
-        dni: "",
-        apellidos: "",
-        nombres: "",
-        fechaNacimiento: "",
-        numeroCamiseta: undefined,
-      });
-      setFormErrors({});
-
-      // Opción: redirigir después de 2 segundos
-      setTimeout(() => {
-        // Puedes descomentar esto si quieres redirigir automáticamente
-        // navigate(`/academias/${academiaId}/equipos/${equipoId}`);
-      }, 2000);
-      
-    } catch (err) {
-      showToast("Error al registrar el jugador. Intenta nuevamente.", "error");
+    // Subir foto a Cloudinary (OPCIONAL)
+    let fotoUrl = "";
+    if (selectedFile) {
+      showToast("Subiendo foto...", "info");
+      try {
+        fotoUrl = await uploadToCloudinary(
+          selectedFile,
+          CLOUDINARY_FOLDERS.JUGADORES
+        );
+      } catch (uploadError) {
+        showToast("Error al subir la foto. Intenta nuevamente.", "error");
+        console.error("Error al subir foto:", uploadError);
+        return; // Detener el proceso si falla la subida
+      }
     }
-  };
 
-  const handleCancel = () => {
-    navigate(`/academias/${academiaId}/equipos/${equipoId}`);
-  };
+    // Preparar datos del formulario
+    const formData = {
+      ...getValues(),
+      fotoUrl: fotoUrl
+    };
 
-  const isFormValid = () => {
-    return (
-      formData.dni &&
-      formData.apellidos &&
-      formData.nombres &&
-      formData.fechaNacimiento &&
-      formData.numeroCamiseta !== undefined &&
-      formData.numeroCamiseta !== null &&
-      formData.numeroCamiseta > 0
-    );
+    setIsRegistering(true);
+
+    await registerJugador(formData);
   };
 
   return (
@@ -155,24 +232,40 @@ export default function FormJugador() {
 
       {/* Toast Notification */}
       {toast.show && (
-        <div className="fixed top-4 right-4 z-50 animate-slide-in">
-          <div className={`rounded-lg shadow-lg p-4 flex items-center gap-3 min-w-[300px] ${
+        <div className="fixed inset-0 flex items-center justify-center z-[99999] pointer-events-none">
+          <div className={`rounded-lg shadow-2xl p-6 flex items-center gap-4 min-w-[350px] max-w-md pointer-events-auto animate-scale-in ${
             toast.type === "success" ? "bg-green-500 text-white" :
             toast.type === "error" ? "bg-red-500 text-white" :
             "bg-blue-500 text-white"
           }`}>
             {toast.type === "success" && (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-              </svg>
+              <div className="w-12 h-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
             )}
             {toast.type === "error" && (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <div className="w-12 h-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
             )}
-            <span className="flex-1">{toast.message}</span>
-            <button onClick={() => setToast({ ...toast, show: false })} className="hover:opacity-80">
+            {toast.type === "info" && (
+              <div className="w-12 h-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center flex-shrink-0">
+                <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            )}
+            <div className="flex-1">
+              <p className="text-lg font-semibold">{toast.message}</p>
+            </div>
+            <button 
+              onClick={() => setToast({ ...toast, show: false })} 
+              className="hover:bg-white hover:bg-opacity-20 rounded-full p-1 transition"
+            >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
@@ -183,38 +276,110 @@ export default function FormJugador() {
 
       {/* Confirmation Modal */}
       {showConfirmModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+        <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-[99999] p-4">
+          <div className="relative w-full max-w-[600px] rounded-3xl bg-white p-6 lg:p-8 shadow-2xl">
+            <button
+              onClick={() => setShowConfirmModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
+            >
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-semibold text-gray-800">Confirmar Registro</h3>
               </div>
-              <h3 className="text-xl font-bold text-gray-900">Confirmar Registro</h3>
-            </div>
-            
-            <div className="mb-6 space-y-2 text-sm text-gray-700">
-              <p><strong>DNI:</strong> {formData.dni}</p>
-              <p><strong>Nombre completo:</strong> {formData.nombres} {formData.apellidos}</p>
-              <p><strong>Fecha de nacimiento:</strong> {new Date(formData.fechaNacimiento).toLocaleDateString()}</p>
-              <p><strong>Número de camiseta:</strong> {formData.numeroCamiseta}</p>
+              <p className="text-sm text-gray-500 ml-15">
+                Revisa la información antes de confirmar el registro del jugador
+              </p>
             </div>
 
-            <p className="text-gray-600 mb-6">¿Estás seguro de que deseas registrar a este jugador?</p>
+            <div className="mb-6">
+              <h5 className="text-sm font-semibold text-gray-700 mb-4 uppercase tracking-wide">
+                Datos del Jugador
+              </h5>
+              <div className="grid grid-cols-1 gap-4">
+                {/* Foto (si existe) */}
+                {previewUrl && (
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="mb-2 text-xs text-blue-600 font-medium">Foto del Jugador</p>
+                    <div className="flex justify-center">
+                      <img 
+                        src={previewUrl} 
+                        alt="Preview jugador" 
+                        className="w-24 h-24 object-cover rounded-lg border-2 border-blue-300"
+                      />
+                    </div>
+                  </div>
+                )}
 
-            <div className="flex gap-3">
+                {/* Datos Personales */}
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="mb-1 text-xs text-gray-500 font-medium">Nombre Completo</p>
+                  <p className="text-sm font-semibold text-gray-800">
+                    {watch("nombres")} {watch("apellidos")}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="mb-1 text-xs text-gray-500 font-medium">DNI</p>
+                    <p className="text-sm font-semibold text-gray-800">{watch("dni")}</p>
+                  </div>
+
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="mb-1 text-xs text-gray-500 font-medium">Número de Camiseta</p>
+                    <p className="text-sm font-semibold text-gray-800">#{watch("numeroCamiseta")}</p>
+                  </div>
+                </div>
+
+                {/* Fecha de Nacimiento */}
+                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <p className="mb-1 text-xs text-purple-600 font-medium">Fecha de Nacimiento</p>
+                  <p className="text-sm font-semibold text-gray-800">
+                    {watch("fechaNacimiento") 
+                      ? new Date(watch("fechaNacimiento")).toLocaleDateString('es-PE', {
+                          day: '2-digit',
+                          month: '2-digit', 
+                          year: 'numeric'
+                        })
+                      : "No especificada"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 pt-4 border-t">
               <button
+                type="button"
                 onClick={() => setShowConfirmModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+                className="flex-1 px-6 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition"
               >
                 Cancelar
               </button>
               <button
                 onClick={confirmSubmit}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                disabled={loading || isSubmitting}
+                className="flex-1 px-6 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Confirmar
+                {loading || isSubmitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Registrando...
+                  </span>
+                ) : (
+                  "Confirmar Registro"
+                )}
               </button>
             </div>
           </div>
@@ -223,14 +388,303 @@ export default function FormJugador() {
 
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-xl shadow-sm border p-6">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit(onSubmitForm)} noValidate>
             <div className="space-y-6">
-              <DefaultJugadorInputs 
-                onChange={handleChange} 
-                initialData={formData}
-                errors={formErrors}
-              />
+              
+              {/* Datos Personales */}
+              <ComponentCard title="Datos Personales">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* DNI */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      DNI <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={8}
+                      placeholder="12345678"
+                      {...register("dni", {
+                        required: "El DNI es requerido",
+                        minLength: {
+                          value: 8,
+                          message: "El DNI debe tener 8 dígitos",
+                        },
+                        maxLength: {
+                          value: 8,
+                          message: "El DNI debe tener 8 dígitos",
+                        },
+                        pattern: {
+                          value: /^[0-9]{8}$/,
+                          message: "El DNI debe contener solo números",
+                        },
+                      })}
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                        errors.dni ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
+                    />
+                    {errors.dni && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.dni.message}
+                      </p>
+                    )}
+                  </div>
 
+                  {/* Número de Camiseta */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Número de Camiseta <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={1}
+                      max={99}
+                      placeholder="10"
+                      {...register("numeroCamiseta", {
+                        required: "El número de camiseta es requerido",
+                        valueAsNumber: true,
+                        min: {
+                          value: 1,
+                          message: "El número debe ser entre 1 y 99",
+                        },
+                        max: {
+                          value: 99,
+                          message: "El número debe ser entre 1 y 99",
+                        },
+                      })}
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                        errors.numeroCamiseta ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
+                    />
+                    {errors.numeroCamiseta && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.numeroCamiseta.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Apellidos */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Apellidos <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="García López"
+                      {...register("apellidos", {
+                        required: "Los apellidos son requeridos",
+                        minLength: {
+                          value: 2,
+                          message: "Los apellidos deben tener al menos 2 caracteres",
+                        },
+                        pattern: {
+                          value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/,
+                          message: "Los apellidos solo pueden contener letras",
+                        },
+                      })}
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                        errors.apellidos ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
+                    />
+                    {errors.apellidos && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.apellidos.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Nombres */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Nombres <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Juan Carlos"
+                      {...register("nombres", {
+                        required: "Los nombres son requeridos",
+                        minLength: {
+                          value: 2,
+                          message: "Los nombres deben tener al menos 2 caracteres",
+                        },
+                        pattern: {
+                          value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/,
+                          message: "Los nombres solo pueden contener letras",
+                        },
+                      })}
+                      className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                        errors.nombres ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
+                    />
+                    {errors.nombres && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.nombres.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Fecha de Nacimiento con auto-avance */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Fecha de Nacimiento <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        ref={dayRef}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={2}
+                        placeholder="DD"
+                        onChange={handleDayChange}
+                        onBlur={updateFechaNacimiento}
+                        className={`w-16 px-3 py-2.5 border rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                          errors.fechaNacimiento ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                      />
+                      <span className="text-gray-500">/</span>
+                      <input
+                        ref={monthRef}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={2}
+                        placeholder="MM"
+                        onChange={handleMonthChange}
+                        onBlur={updateFechaNacimiento}
+                        className={`w-16 px-3 py-2.5 border rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                          errors.fechaNacimiento ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                      />
+                      <span className="text-gray-500">/</span>
+                      <input
+                        ref={yearRef}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={4}
+                        placeholder="AAAA"
+                        onChange={handleYearChange}
+                        onBlur={updateFechaNacimiento}
+                        className={`w-24 px-3 py-2.5 border rounded-lg text-center focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
+                          errors.fechaNacimiento ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
+                      />
+                      {/* Campo oculto para react-hook-form */}
+                      <input
+                        type="hidden"
+                        {...register("fechaNacimiento", {
+                          required: "La fecha de nacimiento es requerida",
+                          validate: validateAge,
+                        })}
+                      />
+                    </div>
+                    {errors.fechaNacimiento && (
+                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        {errors.fechaNacimiento.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </ComponentCard>
+
+              {/* Foto del Jugador (OPCIONAL) */}
+              <ComponentCard title="Foto del Jugador (Opcional)">
+                <div className="grid grid-cols-1 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Foto del Jugador
+                    </label>
+                    
+                    {!previewUrl ? (
+                      // SIN IMAGEN: Mostrar área de subida
+                      <label className="cursor-pointer block">
+                        <div className="flex items-center justify-center w-full px-4 py-8 border-2 border-dashed border-gray-300 rounded-lg hover:border-red-400 hover:bg-red-50 transition">
+                          <div className="text-center">
+                            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                            </svg>
+                            <p className="mt-2 text-sm text-gray-600">
+                              Click para subir foto del jugador
+                            </p>
+                            <p className="mt-1 text-xs text-gray-500">
+                              PNG, JPG hasta 5MB (Opcional)
+                            </p>
+                          </div>
+                        </div>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                      </label>
+                    ) : (
+                      // CON IMAGEN: Mostrar preview con opción de eliminar
+                      <div className="space-y-3">
+                        <div className="flex justify-center">
+                          <label className="cursor-pointer">
+                            <img 
+                              src={previewUrl} 
+                              alt="Foto del jugador" 
+                              style={{ 
+                                width: '200px', 
+                                height: '200px', 
+                                objectFit: 'contain', 
+                                backgroundColor: '#f0f0f0', 
+                                borderRadius: '8px', 
+                                border: '2px solid #e5e7eb' 
+                              }}
+                            />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleFileChange}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                        {/* Botón eliminar */}
+                        <div className="flex justify-center">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setPreviewUrl("");
+                              setSelectedFile(null);
+                              setValue("fotoUrl", "");
+                              const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+                              if (fileInput) fileInput.value = '';
+                            }}
+                            className="px-4 py-2 bg-red-50 text-red-600 rounded-lg font-medium hover:bg-red-100 transition flex items-center gap-2 text-sm"
+                          >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Eliminar imagen
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <input type="hidden" {...register("fotoUrl")} />
+                  </div>
+                </div>
+              </ComponentCard>
+
+              {/* Error general del API */}
               {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3">
                   <svg className="w-5 h-5 text-red-500 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -240,6 +694,7 @@ export default function FormJugador() {
                 </div>
               )}
 
+              {/* Botones */}
               <div className="flex gap-3 pt-4 border-t">
                 <button
                   type="button"
@@ -251,10 +706,10 @@ export default function FormJugador() {
                 
                 <button
                   type="submit"
-                  disabled={loading || !isFormValid()}
+                  disabled={loading || isSubmitting || !isValid}
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500"
                 >
-                  {loading ? (
+                  {loading || isSubmitting ? (
                     <>
                       <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -274,7 +729,7 @@ export default function FormJugador() {
               </div>
 
               <div className="text-xs text-gray-500 text-center pt-2">
-                Los campos marcados son obligatorios
+                Los campos marcados con <span className="text-red-500">*</span> son obligatorios
               </div>
             </div>
           </form>
@@ -282,18 +737,18 @@ export default function FormJugador() {
       </div>
 
       <style>{`
-        @keyframes slide-in {
+        @keyframes scale-in {
           from {
-            transform: translateX(100%);
+            transform: scale(0.9);
             opacity: 0;
           }
           to {
-            transform: translateX(0);
+            transform: scale(1);
             opacity: 1;
           }
         }
-        .animate-slide-in {
-          animation: slide-in 0.3s ease-out;
+        .animate-scale-in {
+          animation: scale-in 0.3s ease-out;
         }
       `}</style>
     </div>

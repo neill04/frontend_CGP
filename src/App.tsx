@@ -37,6 +37,8 @@ import JugadoresList from "./pages/JugadoresList";
 import JugadoresListAcademia from "./pages/Academia/JugadoresListAcademia";
 import EntrenadoresListAcademia from "./pages/Academia/EntrenadoresListAcademia";
 import DelegadosListAcademia from "./pages/Academia/DelegadosListAcademia";
+import UserManagement from "./pages/UsersList";
+import JugadorProfile from "./pages/UserProfiles/JugadorProfile";
 
 export default function App() {
   return (
@@ -70,7 +72,13 @@ export default function App() {
                   <FormAcademia />
                 </ProtectedRoute>
               }/>
-              <Route path="/formAcademia/edit/:id" element={<FormAcademiaEdit />} />
+              <Route path="/formAcademia/edit/:id" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR"]}>
+                    <FormAcademiaEdit />
+                  </ProtectedRoute>
+                }
+              />
               
               <Route path="/academias/:id/formEquipo" 
                 element={
@@ -120,6 +128,14 @@ export default function App() {
                 } 
               />
 
+              <Route path="/academias/:academiaId/equipos/:equipoId/jugadores/:jugadorId"
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
+                    <JugadorProfile />
+                  </ProtectedRoute>
+                } 
+              />
+
               <Route path="/academias/:academiaId/equipos/:equipoId" 
                 element={
                   <ProtectedRoute roles={["ADMINISTRADOR", "ACADEMIA"]} requireAcademiaAccess>
@@ -131,6 +147,14 @@ export default function App() {
               {/* Tables */}
               <Route path="/basic-tables" element={<BasicTables />} />
               
+              <Route path="/users" 
+                element={
+                  <ProtectedRoute roles={["ADMINISTRADOR"]}>
+                    <UserManagement />
+                  </ProtectedRoute>
+                } 
+              />
+
               <Route path="/academias" 
                 element={
                   <ProtectedRoute roles={["ADMINISTRADOR"]}>
