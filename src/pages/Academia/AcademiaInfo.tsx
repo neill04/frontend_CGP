@@ -39,6 +39,7 @@ export default function AcademiaInfo() {
     nombreRepresentante: "",
     dniRepresentante: "",
     telefonoRepresentante: "",
+    liga: "",
     logoUrl: "",
     distritoId: 0,
   });
