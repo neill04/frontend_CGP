@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { registrarJugador, editarJugador, buscarJugador, listarJugadoresPorEquipo, listarTodosLosJugadoresPorAcademia, JugadorDTO } from "../../api/jugadorApi";
+import { registrarJugador, editarJugador, buscarJugador, listarJugadoresPorEquipo, listarTodosLosJugadoresPorAcademia, listarJugadoresRefuerzo, JugadorDTO } from "../../api/jugadorApi";
+import { registrarRefuerzo, eliminarRefuerzo } from "../../api/equipoApi";
 
 export function useJugadores(academiaId: string, equipoId?: string | null) {
   const [jugadores, setJugadores] = useState<JugadorDTO[]>([]);
@@ -29,6 +30,25 @@ export function useJugadores(academiaId: string, equipoId?: string | null) {
     fetchJugadores();
   }, [equipoId]);
 
+  const getJugadoresRefuerzo = async () => {
+    if (typeof equipoId !== "string") {
+      return [];
+    }
+    
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await listarJugadoresRefuerzo(academiaId, equipoId);
+      return res.data; 
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.message || "No se encontraron candidatos para refuerzo.";
+      setError(errorMsg);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const registerJugador = async (data: JugadorDTO) => {
     if (typeof equipoId !== "string") {
       setError("Error");
@@ -45,6 +65,38 @@ export function useJugadores(academiaId: string, equipoId?: string | null) {
       setLoading(false);
     }
   };
+
+  const registerRefuerzo = async (jugadorId: string) => {
+    if (typeof equipoId !== "string") {
+      setError("Error");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      await registrarRefuerzo(academiaId, equipoId, jugadorId);
+      await fetchJugadores();
+    } catch (err: any) {
+      setError(err.response?.data || "Hubo un error al intentar registrar al refuerzo.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const removeRefuerzo = async (jugadorId: string) => {
+  if (typeof equipoId !== "string") return;
+  
+  setLoading(true);
+  setError(null);
+  try {
+    await eliminarRefuerzo(academiaId, equipoId, jugadorId);
+    await fetchJugadores(); 
+  } catch (err: any) {
+    setError(err.response?.data?.message || "No se pudo eliminar el refuerzo.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const updateJugador = async (id: string, data: JugadorDTO) => {
     if (typeof equipoId !== "string") {
@@ -86,6 +138,9 @@ export function useJugadores(academiaId: string, equipoId?: string | null) {
     error,
     fetchJugadores,
     registerJugador,
+    registerRefuerzo,
+    removeRefuerzo,
+    getJugadoresRefuerzo,
     updateJugador,
     getJugador,
   };

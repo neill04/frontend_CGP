@@ -29,3 +29,6 @@ export const listarJugadoresPorEquipo = (academiaId: string, equipoId: string) =
 export const listarTodosLosJugadoresPorAcademia = (academiaId: string) =>
   cliente.get<JugadorDTO[]>(`/api/academias/${academiaId}/jugadores`);
 
+export const listarJugadoresRefuerzo = (academiaId: string, equipoId: string) =>
+  cliente.get<JugadorDTO[]>(`/api/academias/${academiaId}/equipos/${equipoId}/jugadores/refuerzos`)
+

@@ -28,6 +28,12 @@ export interface EquipoDTO {
 export const registrarEquipo = (academiaId: string, data: EquipoDTO) =>
     cliente.post<EquipoDTO>(`/api/academias/${academiaId}/equipos`, data);
 
+export const registrarRefuerzo = (academiaId: string, equipoDestinoId: string, jugadorId: string) => 
+    cliente.post<string>(`/api/academias/${academiaId}/equipos/${equipoDestinoId}/refuerzos/${jugadorId}`);
+
+export const eliminarRefuerzo = (academiaId: string, equipoDestinoId: string, jugadorId: string) => 
+    cliente.delete<void>(`/api/academias/${academiaId}/equipos/${equipoDestinoId}/refuerzos/${jugadorId}`);
+
 export const editarEquipo = (academiaId: string, id: string, data: EquipoDTO) =>
     cliente.put<EquipoDTO>(`/api/academias/${academiaId}/equipos/${id}`, data);
 
