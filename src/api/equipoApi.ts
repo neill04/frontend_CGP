@@ -47,3 +47,9 @@ export const exportarPlanilla = (academiaId: string, equipoId: string) =>
     cliente.get(`/api/academias/${academiaId}/equipos/${equipoId}/planilla`, {
         responseType: "blob",
     });
+
+export const asignarEntrenadorEquipo = (academiaId: string, id: string, entrenadorId: string) => 
+    cliente.patch(`/api/academias/${academiaId}/equipos/${id}/entrenadores/${entrenadorId}`);
+
+export const asignarDelegadoEquipo = (academiaId: string, id: string, delegadoId: string) => 
+    cliente.patch(`/api/academias/${academiaId}/equipos/${id}/delegados/${delegadoId}`);

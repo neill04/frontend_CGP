@@ -29,10 +29,12 @@ export function useEntrenadores(academiaId: string) {
     setLoading(true);
     setError(null);
     try {
-      await registrarEntrenador(academiaId, data);
+      const res = await registrarEntrenador(academiaId, data);
       await fetchEntrenadores();
+      return res.data;
     } catch (err: any) {
       setError(err.response?.data?.message || "Hubo un error al registrar al entrenador.");
+      throw err;
     } finally {
       setLoading(false);
     }

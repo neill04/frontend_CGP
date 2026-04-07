@@ -40,7 +40,7 @@ export default function FormJugador() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isSubmitting },
     reset,
     watch,
     setValue,
@@ -706,7 +706,7 @@ export default function FormJugador() {
                 
                 <button
                   type="submit"
-                  disabled={loading || isSubmitting || !isValid}
+                  disabled={loading || isSubmitting}
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500"
                 >
                   {loading || isSubmitting ? (

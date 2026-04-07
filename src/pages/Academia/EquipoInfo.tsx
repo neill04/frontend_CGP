@@ -494,7 +494,7 @@ export default function EquipoInfo() {
         {/* INFORMACIÓN DEL ENTRENADOR Y DELEGADO */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* CARD ENTRENADOR */}
-          <div className="bg-white border rounded-2xl p-6 shadow-sm hover:shadow-md transition">
+          <div className="bg-white border rounded-2xl p-6 shadow-sm hover:shadow-md transition flex flex-col">
             <div className="flex items-center gap-3 mb-4">
               <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -502,49 +502,74 @@ export default function EquipoInfo() {
               <h3 className="font-bold text-lg">Entrenador</h3>
             </div>
 
-            <div className="flex items-start gap-4">
-              {equipo.fotoUrlEntrenador ? (
-                <img 
-                  src={equipo.fotoUrlEntrenador} 
-                  alt={`${equipo.nombresEntrenador} ${equipo.apellidosEntrenador}`}
-                  className="w-20 h-20 rounded-full object-cover shadow-md border-2 border-blue-100"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold shadow-md flex-shrink-0">
-                  {getInitials(equipo.nombresEntrenador, equipo.apellidosEntrenador)}
-                </div>
-              )}
+            {/* VALIDACIÓN: ¿Tiene entrenador asignado? */}
+            {equipo.nombresEntrenador ? (
+              <div className="flex items-start gap-4">
+                {equipo.fotoUrlEntrenador ? (
+                  <img 
+                    src={equipo.fotoUrlEntrenador} 
+                    alt={`${equipo.nombresEntrenador} ${equipo.apellidosEntrenador}`}
+                    className="w-20 h-20 rounded-full object-cover shadow-md border-2 border-blue-100"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white text-xl font-bold shadow-md flex-shrink-0">
+                    {getInitials(equipo.nombresEntrenador, equipo.apellidosEntrenador)}
+                  </div>
+                )}
 
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-base text-gray-900 truncate">
-                  {equipo.nombresEntrenador} {equipo.apellidosEntrenador}
-                </p>
-                
-                <div className="mt-3 space-y-2 text-sm text-gray-600">
-                  {equipo.dniEntrenador && (
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                      </svg>
-                      <span className="truncate"><strong>DNI:</strong> {equipo.dniEntrenador}</span>
-                    </div>
-                  )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-base text-gray-900 truncate">
+                    {equipo.nombresEntrenador} {equipo.apellidosEntrenador}
+                  </p>
                   
-                  {equipo.telefonoEntrenador && (
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      <span className="truncate"><strong>Teléfono:</strong> {equipo.telefonoEntrenador}</span>
-                    </div>
-                  )}
+                  <div className="mt-3 space-y-2 text-sm text-gray-600">
+                    {equipo.dniEntrenador && (
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                        </svg>
+                        <span className="truncate"><strong>DNI:</strong> {equipo.dniEntrenador}</span>
+                      </div>
+                    )}
+                    
+                    {equipo.telefonoEntrenador && (
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-blue-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        <span className="truncate"><strong>Teléfono:</strong> {equipo.telefonoEntrenador}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              // ESTADO VACÍO - ENTRENADOR
+              <div className="flex-1 bg-amber-50 border border-dashed border-amber-200 rounded-xl p-5 flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-3">
+                  <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <p className="text-sm text-amber-800 font-medium mb-4">
+                  Este equipo aún no tiene un entrenador asignado.
+                </p>
+                <Link 
+                  to={`/academias/${academiaId}/formEntrenador`} 
+                  state={{ equipoDestinoId: equipoId }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-amber-300 hover:bg-amber-50 text-amber-700 text-sm font-semibold rounded-lg transition-colors shadow-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  Asignar Entrenador
+                </Link>
+              </div>
+            )}
           </div>
 
           {/* CARD DELEGADO */}
-          <div className="bg-white border rounded-2xl p-6 shadow-sm hover:shadow-md transition">
+          <div className="bg-white border rounded-2xl p-6 shadow-sm hover:shadow-md transition flex flex-col">
             <div className="flex items-center gap-3 mb-4">
               <svg className="w-5 h-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -552,45 +577,70 @@ export default function EquipoInfo() {
               <h3 className="font-bold text-lg">Delegado</h3>
             </div>
 
-            <div className="flex items-start gap-4">
-              {equipo.fotoUrlDelegado ? (
-                <img 
-                  src={equipo.fotoUrlDelegado} 
-                  alt={`${equipo.nombresDelegado} ${equipo.apellidosDelegado}`}
-                  className="w-20 h-20 rounded-full object-cover shadow-md border-2 border-red-100"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white text-xl font-bold shadow-md flex-shrink-0">
-                  {getInitials(equipo.nombresDelegado, equipo.apellidosDelegado)}
-                </div>
-              )}
+            {/* VALIDACIÓN: ¿Tiene delegado asignado? */}
+            {equipo.nombresDelegado ? (
+              <div className="flex items-start gap-4">
+                {equipo.fotoUrlDelegado ? (
+                  <img 
+                    src={equipo.fotoUrlDelegado} 
+                    alt={`${equipo.nombresDelegado} ${equipo.apellidosDelegado}`}
+                    className="w-20 h-20 rounded-full object-cover shadow-md border-2 border-red-100"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center text-white text-xl font-bold shadow-md flex-shrink-0">
+                    {getInitials(equipo.nombresDelegado, equipo.apellidosDelegado)}
+                  </div>
+                )}
 
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-base text-gray-900 truncate">
-                  {equipo.nombresDelegado} {equipo.apellidosDelegado}
-                </p>
-                
-                <div className="mt-3 space-y-2 text-sm text-gray-600">
-                  {equipo.dniDelegado && (
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
-                      </svg>
-                      <span className="truncate"><strong>DNI:</strong> {equipo.dniDelegado}</span>
-                    </div>
-                  )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-base text-gray-900 truncate">
+                    {equipo.nombresDelegado} {equipo.apellidosDelegado}
+                  </p>
                   
-                  {equipo.telefonoDelegado && (
-                    <div className="flex items-center gap-2">
-                      <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                      </svg>
-                      <span className="truncate"><strong>Teléfono:</strong> {equipo.telefonoDelegado}</span>
-                    </div>
-                  )}
+                  <div className="mt-3 space-y-2 text-sm text-gray-600">
+                    {equipo.dniDelegado && (
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" />
+                        </svg>
+                        <span className="truncate"><strong>DNI:</strong> {equipo.dniDelegado}</span>
+                      </div>
+                    )}
+                    
+                    {equipo.telefonoDelegado && (
+                      <div className="flex items-center gap-2">
+                        <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                        </svg>
+                        <span className="truncate"><strong>Teléfono:</strong> {equipo.telefonoDelegado}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              // ESTADO VACÍO - DELEGADO
+              <div className="flex-1 bg-amber-50 border border-dashed border-amber-200 rounded-xl p-5 flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mb-3">
+                  <svg className="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <p className="text-sm text-amber-800 font-medium mb-4">
+                  Este equipo aún no tiene un delegado asignado.
+                </p>
+                <Link 
+                  to={`/academias/${academiaId}/formDelegado`} 
+                  state={{ equipoDestinoId: equipoId }}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-amber-300 hover:bg-amber-50 text-amber-700 text-sm font-semibold rounded-lg transition-colors shadow-sm"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                  Asignar Delegado
+                </Link>
+              </div>
+            )}
           </div>
         </div>
 

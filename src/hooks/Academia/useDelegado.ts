@@ -29,10 +29,12 @@ export function useDelegados(academiaId: string) {
     setLoading(true);
     setError(null);
     try {
-      await registrarDelegado(academiaId, data);
+      const res = await registrarDelegado(academiaId, data);
       await fetchDelegados();
+      return res.data;
     } catch (err) {
       setError("Hubo un error al registrar al delegado.");
+      throw err;
     } finally {
       setLoading(false);
     }

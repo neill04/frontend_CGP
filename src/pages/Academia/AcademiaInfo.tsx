@@ -251,77 +251,100 @@ export default function AcademiaInfo() {
             {equipos.map((cat) => (
               <div
                 key={cat.id}
-                className="relative bg-white border rounded-xl p-5 shadow-sm hover:shadow-lg transition-all flex flex-col h-full"
+                className="relative bg-white border border-gray-100 rounded-2xl p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] hover:shadow-[0_8px_20px_-6px_rgba(6,81,237,0.15)] transition-all flex flex-col h-full"
               >
-                <Link 
-                  to={`/formEquipo/edit/${cat.id}`} 
-                  className="absolute top-3 right-3 bg-gray-100 hover:bg-gray-200 text-gray-600 p-2 rounded-full shadow-sm transition z-10"
-                  title="Editar Categoria"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path d="M21.731 2.269a2.625 2.625 0 00-3.712 0l-1.157 1.157 3.712 3.712 1.157-1.157a2.625 2.625 0 000-3.712zM19.513 8.199l-3.712-3.712-12.15 12.15a5.25 5.25 0 00-1.32 2.214l-.8 2.685a.75.75 0 00.933.933l2.685-.8a5.25 5.25 0 002.214-1.32L19.513 8.2z" />
-                  </svg>
-                </Link>
-
-                {/* Badge de categoría */}
-                <div className="w-16 h-16 mx-auto rounded-full flex items-center justify-center bg-gradient-to-br from-red-500 to-red-600 text-white shadow-md flex-shrink-0">
-                  <span className="text-2xl font-bold">
-                    {cat.categoria.replace(/\D/g, "")}
-                  </span>
-                </div>
-
-                {/* Estado */}
-                <div className="text-center mt-3 flex-shrink-0">
-                  <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-                    cat.activo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
+                {/* Header de la card: Círculo y Estado */}
+                <div className="flex flex-col items-center mt-2">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center bg-gradient-to-br from-red-500 to-red-600 text-white shadow-md flex-shrink-0 border-4 border-red-50">
+                    <span className="text-2xl font-bold">
+                      {cat.categoria.replace(/\D/g, "")}
+                    </span>
+                  </div>
+                  <span className={`mt-3 text-[11px] px-3 py-1 rounded-full font-bold uppercase tracking-wider ${
+                    cat.activo ? "bg-green-50 text-green-600 border border-green-200" : "bg-red-50 text-red-600 border border-red-200"
                   }`}>
                     {cat.activo ? "Activa" : "Inactiva"}
                   </span>
                 </div>
 
-                {/* Información del equipo - Crece para ocupar espacio disponible */}
-                <div className="mt-4 text-sm text-gray-700 space-y-2 bg-gray-50 rounded-lg p-3 flex-grow">
-                  <div className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    <p className="break-words"><strong>Entrenador:</strong> {cat.nombresEntrenador} {cat.apellidosEntrenador}</p>
+                {/* Información del equipo - Mejor estructurada para valores nulos */}
+                <div className="mt-5 space-y-3 bg-gray-50 border border-gray-100 rounded-xl p-4 flex-grow">
+                  
+                  {/* Fila Entrenador */}
+                  <div className="flex items-start gap-3">
+                    <div className="bg-blue-100 p-1.5 rounded-lg flex-shrink-0 mt-0.5">
+                      <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Entrenador</p>
+                      {cat.nombresEntrenador ? (
+                         <p className="text-sm font-medium text-gray-800 break-words leading-tight mt-0.5">
+                           {cat.nombresEntrenador} {cat.apellidosEntrenador}
+                         </p>
+                      ) : (
+                        <p className="text-sm text-amber-600 italic font-medium leading-tight mt-0.5">
+                          Sin asignar
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <svg className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    <p className="break-words"><strong>Delegado:</strong> {cat.nombresDelegado} {cat.apellidosDelegado}</p>
+
+                  {/* Fila Delegado */}
+                  <div className="flex items-start gap-3">
+                    <div className="bg-purple-100 p-1.5 rounded-lg flex-shrink-0 mt-0.5">
+                      <svg className="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide">Delegado</p>
+                      {cat.nombresDelegado ? (
+                         <p className="text-sm font-medium text-gray-800 break-words leading-tight mt-0.5">
+                           {cat.nombresDelegado} {cat.apellidosDelegado}
+                         </p>
+                      ) : (
+                        <p className="text-sm text-amber-600 italic font-medium leading-tight mt-0.5">
+                          Sin asignar
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <p><strong>Jugadores:</strong> {cat.totalJugadores}</p>
+
+                  <div className="border-t border-gray-200 my-2"></div>
+
+                  {/* Fila Jugadores */}
+                  <div className="flex items-center justify-between">
+                     <div className="flex items-center gap-2 text-gray-600">
+                        <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                        <span className="text-xs font-semibold uppercase tracking-wide">Plantilla</span>
+                     </div>
+                     <span className="bg-white border border-gray-200 px-3 py-1 rounded-lg text-sm font-bold text-gray-800 shadow-sm">
+                       {cat.totalJugadores} jug.
+                     </span>
                   </div>
                 </div>
 
-                {/* Fecha de registro - Siempre en la misma posición */}
-                <div className="mt-3 flex-shrink-0 h-5">
+                {/* Footer: Fecha y Botón */}
+                <div className="mt-4 pt-4 border-t border-gray-50 flex-shrink-0">
+                  <Link
+                    to={`/academias/${academiaId}/equipos/${cat.id}`}
+                    className="flex items-center justify-center gap-2 w-full bg-gray-900 hover:bg-gray-800 text-white rounded-xl py-2.5 text-sm font-semibold transition-all shadow-sm hover:shadow"
+                  >
+                    Gestionar Categoría
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
                   {cat.fechaRegistro && (
-                    <p className="text-xs text-gray-400 text-center">
-                      Registrado: {formatDate(cat.fechaRegistro)}
+                    <p className="text-[10px] text-gray-400 text-center mt-3 uppercase tracking-wider font-medium">
+                      Creado el {formatDate(cat.fechaRegistro)}
                     </p>
                   )}
                 </div>
-
-                {/* Botón - Siempre al final */}
-                <Link
-                  to={`/academias/${academiaId}/equipos/${cat.id}`}
-                  className="mt-4 block w-full text-center bg-gray-900 hover:bg-black text-white border rounded-xl py-2.5 text-sm font-medium transition flex-shrink-0"
-                >
-                  Ver categoría →
-                </Link>
               </div>
             ))}
           </div>

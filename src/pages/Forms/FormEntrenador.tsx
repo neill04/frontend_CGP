@@ -1,12 +1,13 @@
 import { useRef, useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, useLocation } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import { useEntrenadores } from "../../hooks/Academia/useEntrenador";
 import { EntrenadorDTO } from "../../api/entrenadorApi";
 import { CLOUDINARY_FOLDERS, uploadToCloudinary } from "../../utils/uploadImage";
+import { asignarEntrenadorEquipo } from "../../api/equipoApi";
 
 type ToastType = "success" | "error" | "info";
 
@@ -14,6 +15,9 @@ export default function FormEntrenador() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { registerEntrenador, loading, error } = useEntrenadores(id!);
+
+  const location = useLocation();
+  const equipoDestinoId = location.state?.equipoDestinoId;
 
   // Refs para los campos de fecha
   const dayRef = useRef<HTMLInputElement>(null);
@@ -39,7 +43,7 @@ export default function FormEntrenador() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isSubmitting },
     reset,
     watch,
     setValue,
@@ -58,7 +62,6 @@ export default function FormEntrenador() {
     mode: "onChange",
   });
 
-  // Mostrar toast
   const showToast = (message: string, type: ToastType) => {
     setToast({ show: true, message, type });
     setTimeout(() => {
@@ -80,7 +83,6 @@ export default function FormEntrenador() {
       if (!error) {
         showToast("¡Entrenador registrado exitosamente!", "success");
         
-        // Resetear formulario
         reset();
         setSelectedFile(null);
         setPreviewUrl("");
@@ -88,7 +90,6 @@ export default function FormEntrenador() {
         if (monthRef.current) monthRef.current.value = "";
         if (yearRef.current) yearRef.current.value = "";
 
-        // Redirigir después de 2 segundos
         setTimeout(() => {
           navigate(-1);
         }, 2000);
@@ -96,7 +97,6 @@ export default function FormEntrenador() {
     }
   }, [loading, isRegistering, error]);
 
-  // Handlers para campos de fecha con auto-avance
   const handleDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "");
     e.target.value = value;
@@ -126,7 +126,6 @@ export default function FormEntrenador() {
     e.target.value = value;
   };
 
-  // Combinar día, mes y año en una fecha completa
   const updateFechaNacimiento = () => {
     const day = dayRef.current?.value.padStart(2, "0");
     const month = monthRef.current?.value.padStart(2, "0");
@@ -138,17 +137,14 @@ export default function FormEntrenador() {
     }
   };
 
-  // Handler para archivo de foto
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Validar tipo de archivo
       if (!file.type.startsWith("image/")) {
         showToast("Por favor selecciona una imagen válida", "error");
         return;
       }
 
-      // Validar tamaño (máximo 5MB)
       if (file.size > 5 * 1024 * 1024) {
         showToast("La imagen no debe superar los 5MB", "error");
         return;
@@ -157,18 +153,16 @@ export default function FormEntrenador() {
       setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
-      setValue("fotoUrl", "temp"); // Valor temporal para validación
+      setValue("fotoUrl", "temp");
     }
   };
 
-  // Handler para cancelar
   const handleCancel = () => {
     navigate(-1);
   };
 
-  // Validación de edad
   const validateAge = (fecha: string): boolean | string => {
-    if (!fecha) return "La fecha de nacimiento es requerida";
+    if (!fecha) return true; // ✅ OPCIONAL
     
     const fechaNac = new Date(fecha);
     const hoy = new Date();
@@ -182,7 +176,6 @@ export default function FormEntrenador() {
     return edad >= 18 && edad <= 100 ? true : "La edad debe estar entre 18 y 100 años";
   };
 
-  // Submit inicial - muestra modal de confirmación
   const onSubmitForm = (data: EntrenadorDTO) => {
     data;
     setShowConfirmModal(true);
@@ -191,7 +184,6 @@ export default function FormEntrenador() {
   const confirmSubmit = async () => {
     setShowConfirmModal(false);
     
-    // Subir foto a Cloudinary
     let fotoUrl = "";
     if (selectedFile) {
       showToast("Subiendo foto...", "info");
@@ -207,7 +199,6 @@ export default function FormEntrenador() {
       }
     }
 
-    // Preparar datos del formulario
     const formData = {
       ...getValues(),
       fotoUrl: fotoUrl
@@ -215,7 +206,30 @@ export default function FormEntrenador() {
 
     setIsRegistering(true);
 
-    await registerEntrenador(formData);
+    try {
+      const nuevoEntrenador = await registerEntrenador(formData);
+
+      if (equipoDestinoId && nuevoEntrenador && nuevoEntrenador.id) {
+        
+        await asignarEntrenadorEquipo(id!, equipoDestinoId, nuevoEntrenador.id);
+        
+        showToast("¡Entrenador registrado y asignado al equipo!", "success");
+
+        setTimeout(() => {
+          navigate(`/academias/${id}/equipos/${equipoDestinoId}`);
+        }, 2000);
+
+      } else {
+        showToast("¡Entrenador registrado exitosamente!", "success");
+        setTimeout(() => navigate(-1), 2000);
+      }
+
+    } catch (err) {
+      showToast("Error al guardar en la base de datos.", "error");
+      console.error("Error al registrar entrenador:", err);
+    } finally {
+      setIsRegistering(false); 
+    }
   };
 
   return (
@@ -227,7 +241,7 @@ export default function FormEntrenador() {
       
       <PageBreadcrumb pageTitle="Registrar Entrenador" />
 
-      {/* Toast Notification */}
+      {/* Toast y Modal igual que antes... */}
       {toast.show && (
         <div className="fixed inset-0 flex items-center justify-center z-[99999] pointer-events-none">
           <div className={`rounded-lg shadow-2xl p-6 flex items-center gap-4 min-w-[350px] max-w-md pointer-events-auto animate-scale-in ${
@@ -271,7 +285,6 @@ export default function FormEntrenador() {
         </div>
       )}
 
-      {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 backdrop-blur-sm bg-white/30 flex items-center justify-center z-[99999] p-4">
           <div className="relative w-full max-w-[600px] rounded-3xl bg-white p-6 lg:p-8 shadow-2xl">
@@ -294,7 +307,7 @@ export default function FormEntrenador() {
                 <h3 className="text-2xl font-semibold text-gray-800">Confirmar Registro</h3>
               </div>
               <p className="text-sm text-gray-500 ml-15">
-                Revisa la información antes de confirmar el registro del entrenador
+                Revisa la información antes de confirmar
               </p>
             </div>
 
@@ -303,7 +316,6 @@ export default function FormEntrenador() {
                 Datos del Entrenador
               </h5>
               <div className="grid grid-cols-1 gap-4">
-                {/* Foto */}
                 {previewUrl && (
                   <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="mb-2 text-xs text-blue-600 font-medium">Foto del Entrenador</p>
@@ -317,7 +329,6 @@ export default function FormEntrenador() {
                   </div>
                 )}
 
-                {/* Datos Personales */}
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="mb-1 text-xs text-gray-500 font-medium">Nombre Completo</p>
                   <p className="text-sm font-semibold text-gray-800">
@@ -340,29 +351,35 @@ export default function FormEntrenador() {
                             month: '2-digit', 
                             year: 'numeric'
                           })
-                        : "No especificada"}
+                        : "Sin especificar"}
                     </p>
                   </div>
                 </div>
 
-                {/* Datos de Contacto */}
-                <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
-                  <p className="mb-2 text-xs text-purple-600 font-medium">Contacto</p>
-                  <div className="space-y-1">
-                    <p className="text-sm text-gray-800">
-                      <span className="font-medium">Teléfono:</span> {watch("telefono")}
-                    </p>
-                    <p className="text-sm text-gray-800">
-                      <span className="font-medium">Email:</span> {watch("email")}
-                    </p>
+                {(watch("telefono") || watch("email")) && (
+                  <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                    <p className="mb-2 text-xs text-purple-600 font-medium">Contacto</p>
+                    <div className="space-y-1">
+                      {watch("telefono") && (
+                        <p className="text-sm text-gray-800">
+                          <span className="font-medium">Teléfono:</span> {watch("telefono")}
+                        </p>
+                      )}
+                      {watch("email") && (
+                        <p className="text-sm text-gray-800">
+                          <span className="font-medium">Email:</span> {watch("email")}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Datos Profesionales */}
-                <div className="p-4 bg-green-50 rounded-lg border border-green-200">
-                  <p className="mb-1 text-xs text-green-600 font-medium">Licencia Profesional</p>
-                  <p className="text-sm font-semibold text-gray-800">{watch("licencia")}</p>
-                </div>
+                {watch("licencia") && (
+                  <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                    <p className="mb-1 text-xs text-green-600 font-medium">Licencia Profesional</p>
+                    <p className="text-sm font-semibold text-gray-800">{watch("licencia")}</p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -416,18 +433,9 @@ export default function FormEntrenador() {
                       placeholder="12345678"
                       {...register("dni", {
                         required: "El DNI es requerido",
-                        minLength: {
-                          value: 8,
-                          message: "El DNI debe tener 8 dígitos",
-                        },
-                        maxLength: {
-                          value: 8,
-                          message: "El DNI debe tener 8 dígitos",
-                        },
-                        pattern: {
-                          value: /^[0-9]{8}$/,
-                          message: "El DNI debe contener solo números",
-                        },
+                        minLength: { value: 8, message: "El DNI debe tener 8 dígitos" },
+                        maxLength: { value: 8, message: "El DNI debe tener 8 dígitos" },
+                        pattern: { value: /^[0-9]{8}$/, message: "El DNI debe contener solo números" },
                       })}
                       className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                         errors.dni ? 'border-red-500 bg-red-50' : 'border-gray-300'
@@ -453,14 +461,8 @@ export default function FormEntrenador() {
                       placeholder="García López"
                       {...register("apellidos", {
                         required: "Los apellidos son requeridos",
-                        minLength: {
-                          value: 2,
-                          message: "Los apellidos deben tener al menos 2 caracteres",
-                        },
-                        pattern: {
-                          value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/,
-                          message: "Los apellidos solo pueden contener letras",
-                        },
+                        minLength: { value: 2, message: "Los apellidos deben tener al menos 2 caracteres" },
+                        pattern: { value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, message: "Los apellidos solo pueden contener letras" },
                       })}
                       className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                         errors.apellidos ? 'border-red-500 bg-red-50' : 'border-gray-300'
@@ -486,14 +488,8 @@ export default function FormEntrenador() {
                       placeholder="Juan Carlos"
                       {...register("nombres", {
                         required: "Los nombres son requeridos",
-                        minLength: {
-                          value: 2,
-                          message: "Los nombres deben tener al menos 2 caracteres",
-                        },
-                        pattern: {
-                          value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/,
-                          message: "Los nombres solo pueden contener letras",
-                        },
+                        minLength: { value: 2, message: "Los nombres deben tener al menos 2 caracteres" },
+                        pattern: { value: /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, message: "Los nombres solo pueden contener letras" },
                       })}
                       className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                         errors.nombres ? 'border-red-500 bg-red-50' : 'border-gray-300'
@@ -509,10 +505,10 @@ export default function FormEntrenador() {
                     )}
                   </div>
 
-                  {/* Fecha de Nacimiento con auto-avance */}
+                  {/* Fecha de Nacimiento - OPCIONAL */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Fecha de Nacimiento <span className="text-red-500">*</span>
+                      Fecha de Nacimiento <span className="text-gray-400 text-xs">(Opcional)</span>
                     </label>
                     <div className="flex gap-2 items-center">
                       <input
@@ -553,11 +549,9 @@ export default function FormEntrenador() {
                           errors.fechaNacimiento ? 'border-red-500 bg-red-50' : 'border-gray-300'
                         }`}
                       />
-                      {/* Campo oculto para react-hook-form */}
                       <input
                         type="hidden"
                         {...register("fechaNacimiento", {
-                          required: "La fecha de nacimiento es requerida",
                           validate: validateAge,
                         })}
                       />
@@ -574,13 +568,13 @@ export default function FormEntrenador() {
                 </div>
               </ComponentCard>
 
-              {/* Datos de Contacto */}
-              <ComponentCard title="Datos de Contacto">
+              {/* Datos de Contacto - TODO OPCIONAL */}
+              <ComponentCard title="Datos de Contacto (Opcional)">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Teléfono */}
+                  {/* Teléfono - OPCIONAL */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Teléfono <span className="text-red-500">*</span>
+                      Teléfono <span className="text-gray-400 text-xs">(Opcional)</span>
                     </label>
                     <input
                       type="tel"
@@ -588,11 +582,7 @@ export default function FormEntrenador() {
                       maxLength={9}
                       placeholder="987654321"
                       {...register("telefono", {
-                        required: "El teléfono es requerido",
-                        pattern: {
-                          value: /^[0-9]{9}$/,
-                          message: "Debe tener exactamente 9 dígitos",
-                        },
+                        pattern: { value: /^[0-9]{9}$/, message: "Debe tener exactamente 9 dígitos" },
                       })}
                       className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                         errors.telefono ? 'border-red-500 bg-red-50' : 'border-gray-300'
@@ -608,20 +598,16 @@ export default function FormEntrenador() {
                     )}
                   </div>
 
-                  {/* Email */}
+                  {/* Email - OPCIONAL */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Correo Electrónico <span className="text-red-500">*</span>
+                      Correo Electrónico <span className="text-gray-400 text-xs">(Opcional)</span>
                     </label>
                     <input
                       type="email"
                       placeholder="ejemplo@correo.com"
                       {...register("email", {
-                        required: "El correo electrónico es requerido",
-                        pattern: {
-                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                          message: "El correo electrónico no es válido",
-                        },
+                        pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "El correo electrónico no es válido" },
                       })}
                       className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                         errors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'
@@ -639,23 +625,19 @@ export default function FormEntrenador() {
                 </div>
               </ComponentCard>
 
-              {/* Datos Profesionales */}
-              <ComponentCard title="Datos Profesionales">
+              {/* Datos Profesionales - TODO OPCIONAL */}
+              <ComponentCard title="Datos Profesionales (Opcional)">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Licencia */}
+                  {/* Licencia - OPCIONAL */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Número de Licencia <span className="text-red-500">*</span>
+                      Número de Licencia <span className="text-gray-400 text-xs">(Opcional)</span>
                     </label>
                     <input
                       type="text"
                       placeholder="LIC-12345"
                       {...register("licencia", {
-                        required: "La licencia es requerida",
-                        minLength: {
-                          value: 3,
-                          message: "La licencia debe tener al menos 3 caracteres",
-                        },
+                        minLength: { value: 3, message: "La licencia debe tener al menos 3 caracteres" },
                       })}
                       className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition ${
                         errors.licencia ? 'border-red-500 bg-red-50' : 'border-gray-300'
@@ -671,14 +653,13 @@ export default function FormEntrenador() {
                     )}
                   </div>
 
-                  {/* Foto */}
+                  {/* Foto - OPCIONAL */}
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Foto del Entrenador <span className="text-red-500">*</span>
+                      Foto del Entrenador <span className="text-gray-400 text-xs">(Opcional)</span>
                     </label>
                     
                     {!previewUrl ? (
-                      // SIN IMAGEN: Mostrar área de subida
                       <label className="cursor-pointer block">
                         <div className={`flex items-center justify-center w-full px-4 py-8 border-2 border-dashed rounded-lg hover:border-red-400 hover:bg-red-50 transition ${
                           errors.fotoUrl ? 'border-red-500 bg-red-50' : 'border-gray-300'
@@ -703,7 +684,6 @@ export default function FormEntrenador() {
                         />
                       </label>
                     ) : (
-                      // CON IMAGEN: Mostrar preview con opción de eliminar
                       <div className="space-y-3">
                         <div className="flex justify-center">
                           <label className="cursor-pointer">
@@ -727,7 +707,6 @@ export default function FormEntrenador() {
                             />
                           </label>
                         </div>
-                        {/* Botón eliminar */}
                         <div className="flex justify-center">
                           <button
                             type="button"
@@ -749,21 +728,7 @@ export default function FormEntrenador() {
                       </div>
                     )}
                     
-                    <input
-                      type="hidden"
-                      {...register("fotoUrl", {
-                        required: "La foto del entrenador es requerida",
-                      })}
-                    />
-                    
-                    {errors.fotoUrl && (
-                      <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                        {errors.fotoUrl.message}
-                      </p>
-                    )}
+                    <input type="hidden" {...register("fotoUrl")} />
                   </div>
                 </div>
               </ComponentCard>
@@ -790,7 +755,7 @@ export default function FormEntrenador() {
                 
                 <button
                   type="submit"
-                  disabled={loading || isSubmitting || !isValid}
+                  disabled={loading || isSubmitting}
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500"
                 >
                   {loading || isSubmitting ? (
@@ -804,7 +769,7 @@ export default function FormEntrenador() {
                   ) : (
                     <>
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75 Z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
                       </svg>
                       Registrar Entrenador
                     </>
@@ -813,7 +778,7 @@ export default function FormEntrenador() {
               </div>
 
               <div className="text-xs text-gray-500 text-center pt-2">
-                Los campos marcados con <span className="text-red-500">*</span> son obligatorios
+                Solo <span className="font-semibold text-gray-700">DNI, Apellidos y Nombres</span> son obligatorios. Los demás campos pueden completarse después.
               </div>
             </div>
           </form>

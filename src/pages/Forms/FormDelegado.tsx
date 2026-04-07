@@ -1,12 +1,13 @@
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useParams, useNavigate } from "react-router";
+import { useParams, useNavigate, useLocation } from "react-router";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import { useDelegados } from "../../hooks/Academia/useDelegado";
 import { DelegadoDTO } from "../../api/delegadoApi";
 import { CLOUDINARY_FOLDERS, uploadToCloudinary } from "../../utils/uploadImage";
+import { asignarDelegadoEquipo } from "../../api/equipoApi";
 
 type ToastType = "success" | "error" | "info";
 
@@ -14,6 +15,9 @@ export default function FormDelegado() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { registerDelegado, loading, error } = useDelegados(id!);
+
+  const location = useLocation();
+  const equipoDestinoId = location.state?.equipoDestinoId;
 
   // Refs para los campos de fecha
   const dayRef = useRef<HTMLInputElement>(null);
@@ -38,7 +42,7 @@ export default function FormDelegado() {
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting, isValid },
+    formState: { errors, isSubmitting },
     reset,
     watch,
     setValue,
@@ -136,7 +140,7 @@ export default function FormDelegado() {
 
   // Validación de edad
   const validateAge = (fecha: string): boolean | string => {
-    if (!fecha) return "La fecha de nacimiento es requerida";
+    if (!fecha) return true;
     
     const fechaNac = new Date(fecha);
     const hoy = new Date();
@@ -160,38 +164,67 @@ export default function FormDelegado() {
   const confirmSubmit = async () => {
     setShowConfirmModal(false);
     
-    try {
-      const formData = getValues();
-      
-      // Subir foto a Cloudinary
-      if (selectedFile) {
-        showToast("Subiendo foto...", "info");
-        const uploadedUrl = await uploadToCloudinary(
+    let fotoUrl = "";
+    if (selectedFile) {
+      showToast("Subiendo foto...", "info");
+      try {
+        fotoUrl = await uploadToCloudinary(
           selectedFile,
           CLOUDINARY_FOLDERS.DELEGADOS
         );
-        formData.fotoUrl = uploadedUrl;
+      } catch (uploadError) {
+        showToast("Error al subir la foto. Intenta nuevamente.", "error");
+        console.error("Error al subir foto:", uploadError);
+        return; // Detenemos el guardado si la foto falla
       }
+    }
 
-      await registerDelegado(formData);
-      showToast("¡Delegado registrado exitosamente!", "success");
-      
-      // Resetear formulario
-      reset();
-      setSelectedFile(null);
-      setPreviewUrl("");
-      if (dayRef.current) dayRef.current.value = "";
-      if (monthRef.current) monthRef.current.value = "";
-      if (yearRef.current) yearRef.current.value = "";
+    const formDataFinal = {
+      ...getValues(),
+      fotoUrl: fotoUrl
+    };
 
-      // Redirigir después de 2 segundos
-      setTimeout(() => {
-        navigate(-1);
-      }, 2000);
+    try {
+      const nuevoDelegado = await registerDelegado(formDataFinal);
+
+      if (equipoDestinoId && nuevoDelegado && nuevoDelegado.id) {
+        
+        await asignarDelegadoEquipo(id!, equipoDestinoId, nuevoDelegado.id);
+        
+        showToast("¡Delegado registrado y asignado al equipo!", "success");
+        
+        reset();
+        setSelectedFile(null);
+        setPreviewUrl("");
+        if (dayRef.current) dayRef.current.value = "";
+        if (monthRef.current) monthRef.current.value = "";
+        if (yearRef.current) yearRef.current.value = "";
+
+        // Regresar a la vista del equipo
+        setTimeout(() => {
+          navigate(`/academias/${id}/equipos/${equipoDestinoId}`);
+        }, 2000);
+
+      } else {
+        // Flujo normal (Desde el menú principal)
+        showToast("¡Delegado registrado exitosamente!", "success");
+        
+        // Resetear formulario
+        reset();
+        setSelectedFile(null);
+        setPreviewUrl("");
+        if (dayRef.current) dayRef.current.value = "";
+        if (monthRef.current) monthRef.current.value = "";
+        if (yearRef.current) yearRef.current.value = "";
+
+        setTimeout(() => navigate(-1), 2000);
+      }
       
     } catch (err) {
       showToast("Error al registrar el delegado. Intenta nuevamente.", "error");
       console.error("Error:", err);
+    } finally {
+      // Si usas un loader general, apágalo aquí
     }
   };
 
@@ -483,7 +516,7 @@ export default function FormDelegado() {
                   {/* Fecha de Nacimiento con auto-avance */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Fecha de Nacimiento <span className="text-red-500">*</span>
+                      Fecha de Nacimiento <span className="text-gray-400 text-xs">(Opcional)</span>
                     </label>
                     <div className="flex gap-2 items-center">
                       <input
@@ -528,7 +561,6 @@ export default function FormDelegado() {
                       <input
                         type="hidden"
                         {...register("fechaNacimiento", {
-                          required: "La fecha de nacimiento es requerida",
                           validate: validateAge,
                         })}
                       />
@@ -551,7 +583,7 @@ export default function FormDelegado() {
                   {/* Teléfono */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Teléfono <span className="text-red-500">*</span>
+                      Teléfono <span className="text-gray-400 text-xs">(Opcional)</span>
                     </label>
                     <input
                       type="tel"
@@ -559,7 +591,6 @@ export default function FormDelegado() {
                       maxLength={9}
                       placeholder="987654321"
                       {...register("telefono", {
-                        required: "El teléfono es requerido",
                         pattern: {
                           value: /^[0-9]{9}$/,
                           message: "Debe tener exactamente 9 dígitos",
@@ -582,13 +613,12 @@ export default function FormDelegado() {
                   {/* Email */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Correo Electrónico <span className="text-red-500">*</span>
+                      Correo Electrónico <span className="text-gray-400 text-xs">(Opcional)</span>
                     </label>
                     <input
                       type="email"
                       placeholder="ejemplo@correo.com"
                       {...register("email", {
-                        required: "El correo electrónico es requerido",
                         pattern: {
                           value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                           message: "El correo electrónico no es válido",
@@ -615,7 +645,7 @@ export default function FormDelegado() {
                 <div className="grid grid-cols-1 gap-6">
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Foto del Delegado <span className="text-red-500">*</span>
+                      Foto del Delegado <span className="text-gray-400 text-xs">(Opcional)</span>
                     </label>
                     
                     {!previewUrl ? (
@@ -690,12 +720,7 @@ export default function FormDelegado() {
                       </div>
                     )}
                     
-                    <input
-                      type="hidden"
-                      {...register("fotoUrl", {
-                        required: "La foto del delegado es requerida",
-                      })}
-                    />
+                    <input type="hidden" {...register("fotoUrl")}/>
                     
                     {errors.fotoUrl && (
                       <p className="mt-1 text-sm text-red-600 flex items-center gap-1">
@@ -731,7 +756,7 @@ export default function FormDelegado() {
                 
                 <button
                   type="submit"
-                  disabled={loading || isSubmitting || !isValid}
+                  disabled={loading || isSubmitting}
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-red-500"
                 >
                   {loading || isSubmitting ? (
@@ -745,7 +770,7 @@ export default function FormDelegado() {
                   ) : (
                     <>
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75 Z" />
                       </svg>
                       Registrar Delegado
                     </>
@@ -754,7 +779,7 @@ export default function FormDelegado() {
               </div>
 
               <div className="text-xs text-gray-500 text-center pt-2">
-                Los campos marcados con <span className="text-red-500">*</span> son obligatorios
+                Solo <span className="font-semibold text-gray-700">DNI, Apellidos y Nombres</span> son obligatorios. Los demás campos pueden completarse después.
               </div>
             </div>
           </form>
